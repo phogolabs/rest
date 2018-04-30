@@ -97,6 +97,39 @@ func (e *Error) Wrap(err error) *Error {
 	return e
 }
 
+// Cause returns the real reason for the error
+func (e *Error) Cause() error {
+	if e.Reason == nil {
+		return e
+	}
+
+	if reason, ok := e.Reason.(*Error); ok {
+		return reason.Cause()
+	}
+
+	return e.Reason
+}
+
+func (e Error) prepare() *Error {
+	err := &Error{
+		Code:    e.Code,
+		Message: e.Message,
+		Details: e.Details,
+	}
+
+	if e.Reason == nil {
+		return err
+	}
+
+	if reason, ok := e.Reason.(*Error); ok {
+		err.Reason = reason.prepare()
+	} else {
+		err.Reason = &Error{Message: e.Reason.Error()}
+	}
+
+	return err
+}
+
 // RespondErr responses with error
 func RespondErr(w http.ResponseWriter, r *http.Request, statusCode int, err *Error) {
 	response := &ErrorResponse{

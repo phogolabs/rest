@@ -24,8 +24,23 @@ var _ = Describe("Error", func() {
 		Expect(err.Reason).To(MatchError("Inner Error"))
 	})
 
-	It("returns the correct error message", func() {
+	It("returns the error that causes the error", func() {
+		leaf := fmt.Errorf("Inner Error")
 
+		err := rho.NewError(201, "Oh no!", "Unexpected error")
+		err.Wrap(rho.NewError(202, "Madness").Wrap(leaf))
+
+		Expect(err.Cause()).To(MatchError("Inner Error"))
+	})
+
+	Context("when there is not reason", func() {
+		It("returns the error that causes the error", func() {
+			err := rho.NewError(201, "Oh no!", "Unexpected error")
+			Expect(err.Cause()).To(Equal(err))
+		})
+	})
+
+	It("returns the correct error message", func() {
 		err := rho.NewError(201, "Oh no!", "Unexpected error")
 		err.Wrap(fmt.Errorf("Inner Error"))
 

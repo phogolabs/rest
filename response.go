@@ -59,6 +59,8 @@ func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 		e.StatusCode = http.StatusInternalServerError
 	}
 
+	e.Err = e.Err.prepare()
+
 	if e.Err.Code <= 0 {
 		e.Err.Code = ErrCodeUnknown
 	}
