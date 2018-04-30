@@ -35,6 +35,22 @@ func URLParamUUID(r *http.Request, key string) (uuid.UUID, error) {
 	return uuid.Nil, err
 }
 
+// URLParamUUIDOrValue returns a request query parameter as UUID or the
+// provided default value if cannot parse the parameter.
+func URLParamUUIDOrValue(r *http.Request, key string, value uuid.UUID) uuid.UUID {
+	param, err := URLParamUUID(r, key)
+	if err != nil {
+		param = value
+	}
+
+	return param
+}
+
+// URLParamUUIDOrNil returns a nil value if cannot parse the UUID parameter
+func URLParamUUIDOrNil(r *http.Request, key string) uuid.UUID {
+	return URLParamUUIDOrValue(r, key, uuid.Nil)
+}
+
 // URLParamInt returns a request query parameter as int64
 func URLParamInt(r *http.Request, key string, base, bitSize int) (int64, error) {
 	param := chi.URLParam(r, key)
@@ -48,8 +64,19 @@ func URLParamInt(r *http.Request, key string, base, bitSize int) (int64, error) 
 		return value, nil
 	}
 
-	err = paramParseErr(key, "integer", err)
+	err = paramParseErr(key, "integer number", err)
 	return 0, err
+}
+
+// URLParamIntOrValue returns a request query parameter as int64 or the
+// provided default value if cannot parse the parameter.
+func URLParamIntOrValue(r *http.Request, key string, base, bitSize int, value int64) int64 {
+	param, err := URLParamInt(r, key, base, bitSize)
+	if err != nil {
+		param = value
+	}
+
+	return param
 }
 
 // URLParamUint returns a request query parameter as uint64
@@ -65,8 +92,19 @@ func URLParamUint(r *http.Request, key string, base, bitSize int) (uint64, error
 		return value, nil
 	}
 
-	err = paramParseErr(key, "unsigned integer", err)
+	err = paramParseErr(key, "unsigned integer number", err)
 	return 0, err
+}
+
+// URLParamUintOrValue returns a request query parameter as uint64 or the
+// provided default value if cannot parse the parameter.
+func URLParamUintOrValue(r *http.Request, key string, base, bitSize int, value uint64) uint64 {
+	param, err := URLParamUint(r, key, base, bitSize)
+	if err != nil {
+		param = value
+	}
+
+	return param
 }
 
 // URLParamFloat returns a request query parameter as float64
@@ -82,8 +120,19 @@ func URLParamFloat(r *http.Request, key string, bitSize int) (float64, error) {
 		return value, nil
 	}
 
-	err = paramParseErr(key, "float", err)
+	err = paramParseErr(key, "float number", err)
 	return 0, err
+}
+
+// URLParamFloatOrValue returns a request query parameter as float64 or the
+// provided default value if cannot parse the parameter.
+func URLParamFloatOrValue(r *http.Request, key string, bitSize int, value float64) float64 {
+	param, err := URLParamFloat(r, key, bitSize)
+	if err != nil {
+		param = value
+	}
+
+	return param
 }
 
 // URLParamTime returns a request query parameter as time.Time
@@ -94,13 +143,25 @@ func URLParamTime(r *http.Request, key, format string) (time.Time, error) {
 		return time.Time{}, paramRequiredErr(key)
 	}
 
-	value, err := time.Parse(param, format)
+	value, err := time.Parse(format, param)
 	if err == nil {
 		return value, nil
 	}
 
-	err = paramParseErr(key, "date time", err)
+	info := fmt.Sprintf("Expected date time format '%s'", format)
+	err = paramParseErr(key, "date time", err, info)
 	return time.Time{}, err
+}
+
+// URLParamTimeOrValue returns a request query parameter as time.Time or the
+// provided default value if cannot parse the parameter.
+func URLParamTimeOrValue(r *http.Request, key, format string, value time.Time) time.Time {
+	param, err := URLParamTime(r, key, format)
+	if err != nil {
+		param = value
+	}
+
+	return param
 }
 
 func paramRequiredErr(key string) error {
@@ -112,11 +173,12 @@ func paramRequiredErr(key string) error {
 	return err
 }
 
-func paramParseErr(key, tname string, err error) error {
-	msg := fmt.Sprintf("Parameter '%s' is not valid %s", key, tname)
+func paramParseErr(key, tname string, err error, details ...string) error {
+	info := fmt.Sprintf("Parameter '%s' is not valid %s", key, tname)
+	message := append([]string{info}, details...)
 	errx := &ErrorResponse{
 		StatusCode: http.StatusUnprocessableEntity,
-		Err:        errorx.New(ErrCodeParamInvalid, msg),
+		Err:        errorx.New(ErrCodeParamInvalid, message...),
 	}
 	errx.Err.Wrap(err)
 	return errx
