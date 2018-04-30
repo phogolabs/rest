@@ -43,6 +43,8 @@ const (
 	ErrCodeValidationError = 40109
 )
 
+var _ error = &Error{}
+
 // Error is a more feature rich implementation of error interface inspired
 // by PostgreSQL error style guide
 type Error struct {
@@ -80,6 +82,10 @@ func (e *Error) Error() string {
 
 	if len(e.Details) > 0 {
 		table.AddRow("details:", strings.Join(e.Details, ", "))
+	}
+
+	if e.Reason != nil {
+		table.AddRow("reason:", e.Reason.Error())
 	}
 
 	return table.String()
