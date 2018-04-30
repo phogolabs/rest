@@ -1,21 +1,26 @@
 package rho
 
 import (
-	"encoding/json"
-	"encoding/xml"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
-	"github.com/goware/errorx"
+	"github.com/gosuri/uitable"
 	"github.com/lib/pq"
 )
 
-func init() {
-	errorx.SetVerbosity(1)
-}
-
 const (
+	// ErrCodeParamRequired is an error code returned when the parameter is missing
+	ErrCodeParamRequired = 20101
+	// ErrCodeParamInvalid is an error code returned when the parameter's value is an invalid
+	ErrCodeParamInvalid = 20102
+	// ErrCodeQueryParamRequired is an error code returned when the query parameter is missing
+	ErrCodeQueryParamRequired = 20103
+	// ErrCodeQueryParamInvalid is an error code returned when the query parameter's value is an invalid
+	ErrCodeQueryParamInvalid = 20104
+	// ErrCodeUnknown when the error is unknown
+	ErrCodeUnknown = 40000
 	// ErrCodeConflict when the API request cannot be completed because the requested operation would conflict with an existing item.
 	ErrCodeConflict = 40101
 	// ErrCodeDuplicate when the requested operation failed because it tried to create a resource that already exists.
@@ -38,44 +43,52 @@ const (
 	ErrCodeValidationError = 40109
 )
 
-var (
-	_ render.Renderer = &ErrorResponse{}
-	_ error           = &ErrorResponse{}
-)
-
 // Error is a more feature rich implementation of error interface inspired
 // by PostgreSQL error style guide
-type Error = errorx.Errorx
-
-// ErrorResponse represents a HTTP error response
-type ErrorResponse struct {
-	StatusCode int
-	Err        *Error
+type Error struct {
+	Code    int      `json:"code" xml:"code"`
+	Message string   `json:"message" xml:"message"`
+	Reason  error    `json:"reason,omitempty" xml:"reason,omitempty"`
+	Details []string `json:"details,omitempty" xml:"details,omitempty"`
 }
 
-// Error returns the error message from the underlying error
-func (e *ErrorResponse) Error() string {
-	return e.Err.Error()
-}
+// NewError returns an error with error code and error messages provided in
+// function params
+func NewError(code int, msg ...string) *Error {
+	e := Error{Code: code}
 
-// Render renders a single error and respond to the client request.
-func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	if e.StatusCode <= 0 {
-		return fmt.Errorf("Invalid status code: %d", e.StatusCode)
+	count := len(msg)
+	if count > 0 {
+		e.Message = msg[0]
 	}
 
-	render.Status(r, e.StatusCode)
-	return nil
+	if count > 1 {
+		e.Details = msg[1:]
+	}
+
+	return &e
 }
 
-// MarshalJSON encodes the error into JSON
-func (e *ErrorResponse) MarshalJSON() ([]byte, error) {
-	return json.Marshal(e.Error)
+// Error returns the error message
+func (e *Error) Error() string {
+	table := uitable.New()
+	table.MaxColWidth = 80
+	table.Wrap = true
+
+	table.AddRow("code:", fmt.Sprintf("%d", e.Code))
+	table.AddRow("message:", e.Message)
+
+	if len(e.Details) > 0 {
+		table.AddRow("details:", strings.Join(e.Details, ", "))
+	}
+
+	return table.String()
 }
 
-// MarshalXML encodes the error into XML
-func (e *ErrorResponse) MarshalXML(enc *xml.Encoder, start xml.StartElement) error {
-	return enc.EncodeElement(e.Error, start)
+// Wrap wraps the actual error
+func (e *Error) Wrap(err error) *Error {
+	e.Reason = err
+	return e
 }
 
 // RespondErr responses with error

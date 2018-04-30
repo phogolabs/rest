@@ -6,15 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/goware/errorx"
 	uuid "github.com/satori/go.uuid"
-)
-
-const (
-	// ErrCodeQueryParamRequired is an error code returned when the query parameter is missing
-	ErrCodeQueryParamRequired = 20103
-	// ErrCodeQueryParamInvalid is an error code returned when the query parameter's value is an invalid
-	ErrCodeQueryParamInvalid = 20104
 )
 
 // URLQueryParam returns the query param
@@ -172,7 +164,7 @@ func queryParamRequiredErr(key string) error {
 	msg := fmt.Sprintf("Query Parameter '%s' is required", key)
 	err := &ErrorResponse{
 		StatusCode: http.StatusBadRequest,
-		Err:        errorx.New(ErrCodeParamRequired, msg),
+		Err:        NewError(ErrCodeParamRequired, msg),
 	}
 	return err
 }
@@ -182,7 +174,7 @@ func queryParamParseErr(key, tname string, err error, details ...string) error {
 	message := append([]string{info}, details...)
 	errx := &ErrorResponse{
 		StatusCode: http.StatusUnprocessableEntity,
-		Err:        errorx.New(ErrCodeParamInvalid, message...),
+		Err:        NewError(ErrCodeParamInvalid, message...),
 	}
 	errx.Err.Wrap(err)
 	return errx

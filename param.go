@@ -7,15 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/goware/errorx"
 	uuid "github.com/satori/go.uuid"
-)
-
-const (
-	// ErrCodeParamRequired is an error code returned when the parameter is missing
-	ErrCodeParamRequired = 20101
-	// ErrCodeParamInvalid is an error code returned when the parameter's value is an invalid
-	ErrCodeParamInvalid = 20102
 )
 
 // URLParamUUID returns a request query parameter as UUID
@@ -168,7 +160,7 @@ func paramRequiredErr(key string) error {
 	msg := fmt.Sprintf("Parameter '%s' is required", key)
 	err := &ErrorResponse{
 		StatusCode: http.StatusBadRequest,
-		Err:        errorx.New(ErrCodeParamRequired, msg),
+		Err:        NewError(ErrCodeParamRequired, msg),
 	}
 	return err
 }
@@ -178,7 +170,7 @@ func paramParseErr(key, tname string, err error, details ...string) error {
 	message := append([]string{info}, details...)
 	errx := &ErrorResponse{
 		StatusCode: http.StatusUnprocessableEntity,
-		Err:        errorx.New(ErrCodeParamInvalid, message...),
+		Err:        NewError(ErrCodeParamInvalid, message...),
 	}
 	errx.Err.Wrap(err)
 	return errx
