@@ -67,6 +67,20 @@ var _ = Describe("JSON Error", func() {
 		})
 	})
 
+	Context("when the err is UnsupportedValueError", func() {
+		It("handles the error correctly", func() {
+			err := &json.UnsupportedValueError{Value: reflect.ValueOf(*r)}
+			rho.HandleErr(w, r, err)
+
+			Expect(w.Code).To(Equal(http.StatusInternalServerError))
+			payload := unmarshalErrResponse(w.Body)
+
+			Expect(payload).To(HaveKeyWithValue("code", float64(rho.ErrInternal)))
+			Expect(payload).To(HaveKeyWithValue("message", "Unable to marshal json"))
+			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
+		})
+	})
+
 	Context("when the err is UnsupportedTypeError", func() {
 		It("handles the error correctly", func() {
 			err := &json.UnsupportedTypeError{Type: reflect.TypeOf(*r)}

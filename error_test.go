@@ -2,6 +2,8 @@ package rho_test
 
 import (
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 
 	"github.com/gosuri/uitable"
@@ -54,5 +56,49 @@ var _ = Describe("Error", func() {
 		table.AddRow("reason:", err.Reason.Error())
 
 		Expect(err.Error()).To(Equal(table.String()))
+	})
+})
+
+var _ = Describe("HandleErr", func() {
+	var (
+		r *http.Request
+		w *httptest.ResponseRecorder
+	)
+
+	BeforeEach(func() {
+		w = httptest.NewRecorder()
+		r = httptest.NewRequest("GET", "http://example.com", nil)
+	})
+
+	Context("when the error is regular error", func() {
+		It("handles the error", func() {
+			err := fmt.Errorf("Oh no!")
+			rho.HandleErr(w, r, err)
+
+			Expect(w.Code).To(Equal(http.StatusInternalServerError))
+			payload := unmarshalErrResponse(w.Body)
+
+			Expect(payload).To(HaveKeyWithValue("code", float64(rho.ErrUnknown)))
+			Expect(payload).To(HaveKeyWithValue("message", "Unknown Error"))
+			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
+		})
+	})
+
+	Context("when the error is ErrorReponse", func() {
+		It("handles the error", func() {
+			err := &rho.ErrorResponse{
+				StatusCode: http.StatusBadGateway,
+				Err:        rho.NewError(1, "Oh no!"),
+			}
+
+			rho.HandleErr(w, r, err)
+
+			Expect(w.Code).To(Equal(err.StatusCode))
+			payload := unmarshalErrResponse(w.Body)
+
+			Expect(payload).To(HaveKeyWithValue("code", float64(1)))
+			Expect(payload).To(HaveKeyWithValue("message", "Oh no!"))
+			Expect(payload).NotTo(HaveKey("reason"))
+		})
 	})
 })
