@@ -15,16 +15,18 @@ const (
 func JSONError(err error) *ErrorResponse {
 	response := &ErrorResponse{
 		StatusCode: http.StatusInternalServerError,
-		Err:        NewError(ErrInvalid, jsonMsg),
+		Err:        NewError(ErrInternal, jsonMsg),
 	}
 
 	switch err.(type) {
 	case *json.InvalidUnmarshalError:
 		response.Err.Message = jsonUnmarshalMsg
 	case *json.UnmarshalFieldError:
+		response.Err.Code = ErrInvalid
 		response.Err.Message = jsonUnmarshalMsg
 		response.StatusCode = http.StatusBadRequest
 	case *json.UnmarshalTypeError:
+		response.Err.Code = ErrInvalid
 		response.Err.Message = jsonUnmarshalMsg
 		response.StatusCode = http.StatusBadRequest
 	case *json.UnsupportedTypeError:

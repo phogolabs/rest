@@ -157,6 +157,8 @@ func HandleErr(w http.ResponseWriter, r *http.Request, err error) {
 		response = err.(*ErrorResponse)
 	case "encoding/json":
 		response = JSONError(err)
+	case "encoding/xml":
+		response = XMLError(err)
 	default:
 		response = &ErrorResponse{
 			StatusCode: http.StatusInternalServerError,

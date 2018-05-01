@@ -1,5 +1,5 @@
 hash: 87c13a8ddd4da0f4582931413b08ce3e00762d6dc715a0d0beb42bb7cc35b4d1
-updated: 2018-04-30T12:11:24.366663+01:00
+updated: 2018-05-01T16:43:38.650679+01:00
 imports:
 - name: github.com/go-chi/chi
   version: e83ac2304db3c50cf03d96a2fcd39009d458bc35
@@ -66,7 +66,7 @@ testImports:
   - html/atom
   - html/charset
 - name: golang.org/x/sys
-  version: f67ecc163a74fbeea4cb1db0a101dcd07201464a
+  version: 78d5f264b493f125018180c204871ecf58a2dce1
   subpackages:
   - unix
 - name: golang.org/x/text
