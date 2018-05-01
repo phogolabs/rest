@@ -33,6 +33,8 @@ const (
 )
 
 const (
+	// ErrInvalid when the provided payload is invalid
+	ErrInvalid = 40222
 	// ErrBackend when a backend error occurred 503. Usually database.
 	ErrBackend = 40106
 	// ErrBackendNotConnected when the request failed due to a connection error.
@@ -153,6 +155,8 @@ func HandleErr(w http.ResponseWriter, r *http.Request, err error) {
 		response = PGError(err.(pq.Error))
 	case "github.com/phogolabs/rho":
 		response = err.(*ErrorResponse)
+	case "encoding/json":
+		response = JSONError(err)
 	default:
 		response = &ErrorResponse{
 			StatusCode: http.StatusInternalServerError,
