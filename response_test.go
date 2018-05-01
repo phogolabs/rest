@@ -94,7 +94,7 @@ var _ = Describe("ErrResponse", func() {
 		err := rho.NewError(12345, "Oh no!")
 
 		response := &rho.ErrorResponse{Err: err}
-		Expect(response.Error()).To(Equal(err.Error()))
+		Expect(response.Error()).To(Equal(err.Message))
 	})
 
 	It("set the status code", func() {
@@ -126,7 +126,7 @@ var _ = Describe("ErrResponse", func() {
 			err := rho.NewError(0, "Oh no!")
 			response := &rho.ErrorResponse{Err: err}
 			Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
-			Expect(response.Err.Code).To(Equal(rho.ErrCodeUnknown))
+			Expect(response.Err.Code).To(Equal(rho.ErrUnknown))
 		})
 	})
 })

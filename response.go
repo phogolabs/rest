@@ -50,7 +50,7 @@ type ErrorResponse struct {
 
 // Error returns the error message from the underlying error
 func (e *ErrorResponse) Error() string {
-	return e.Err.Error()
+	return e.Err.Message
 }
 
 // Render renders a single error and respond to the client request.
@@ -62,7 +62,7 @@ func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	e.Err = e.Err.prepare()
 
 	if e.Err.Code <= 0 {
-		e.Err.Code = ErrCodeUnknown
+		e.Err.Code = ErrUnknown
 	}
 
 	render.Status(r, e.StatusCode)

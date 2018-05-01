@@ -160,7 +160,7 @@ func paramRequiredErr(key string) error {
 	msg := fmt.Sprintf("Parameter '%s' is required", key)
 	err := &ErrorResponse{
 		StatusCode: http.StatusBadRequest,
-		Err:        NewError(ErrCodeParamRequired, msg),
+		Err:        NewError(ErrParamRequired, msg),
 	}
 	return err
 }
@@ -170,7 +170,7 @@ func paramParseErr(key, tname string, err error, details ...string) error {
 	message := append([]string{info}, details...)
 	errx := &ErrorResponse{
 		StatusCode: http.StatusUnprocessableEntity,
-		Err:        NewError(ErrCodeParamInvalid, message...),
+		Err:        NewError(ErrParamInvalid, message...),
 	}
 	errx.Err.Wrap(err)
 	return errx
