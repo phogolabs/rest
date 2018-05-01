@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/gosuri/uitable"
-	"github.com/lib/pq"
 )
 
 const (
@@ -152,13 +151,17 @@ func HandleErr(w http.ResponseWriter, r *http.Request, err error) {
 
 	switch pkgName(err) {
 	case "github.com/lib/pq":
-		response = PGError(err.(pq.Error))
+		response = PGError(err)
 	case "github.com/phogolabs/rho":
 		response = err.(*ErrorResponse)
 	case "encoding/json":
 		response = JSONError(err)
 	case "encoding/xml":
 		response = XMLError(err)
+	case "strconv":
+		response = ConvError(err)
+	case "time":
+		response = TimeError(err)
 	default:
 		response = &ErrorResponse{
 			StatusCode: http.StatusInternalServerError,

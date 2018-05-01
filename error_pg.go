@@ -18,19 +18,22 @@ const (
 )
 
 // PGError creates a ErrorResponse for given PostgreSQL error
-func PGError(err pq.Error) *ErrorResponse {
-	var response *ErrorResponse
+func PGError(err error) *ErrorResponse {
+	var (
+		pgErr    = err.(pq.Error)
+		response *ErrorResponse
+	)
 
-	switch err.Code[:2] {
+	switch pgErr.Code[:2] {
 	case pgConnClassErr:
 		response = &ErrorResponse{
 			StatusCode: http.StatusInternalServerError,
 			Err:        NewError(ErrBackendNotConnected, "Connection Error"),
 		}
 	case pgDataClassErr:
-		response = PGDataError(err)
+		response = PGDataError(pgErr)
 	case pgContraintClassErr:
-		response = PGIntegrityError(err)
+		response = PGIntegrityError(pgErr)
 	case pgOpIntClassErr:
 		response = &ErrorResponse{
 			StatusCode: http.StatusInternalServerError,
