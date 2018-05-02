@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/phogolabs/rho"
+	"github.com/phogolabs/rho/httperr"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -44,7 +45,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'id' is required"))
@@ -59,7 +60,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'id' is not valid UUID"))
@@ -94,7 +95,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is required"))
@@ -109,7 +110,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid integer number"))
@@ -141,7 +142,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamUint(r, "num", 0, 64)
 				Expect(err).NotTo(BeNil())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid unsigned integer number"))
@@ -154,7 +155,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is required"))
@@ -175,7 +176,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid unsigned integer number"))
@@ -199,7 +200,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is required"))
@@ -214,7 +215,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid float number"))
@@ -244,7 +245,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamTime(r, "from", time.RFC3339Nano)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'from' is required"))
@@ -259,7 +260,7 @@ var _ = Describe("Param", func() {
 				value, err := rho.URLParamTime(r, "from", time.RFC3339Nano)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*rho.ErrorResponse)
+				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr.Err.Message).To(Equal("Parameter 'from' is not valid date time"))

@@ -6,11 +6,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-var (
-	_ render.Renderer = &Response{}
-	_ render.Renderer = &ErrorResponse{}
-	_ error           = &ErrorResponse{}
-)
+var _ render.Renderer = &Response{}
 
 // ResponseMeta keeps meta information for the successful response
 type ResponseMeta struct {
@@ -39,32 +35,5 @@ func (p *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	render.Status(r, p.StatusCode)
-	return nil
-}
-
-// ErrorResponse represents a HTTP error response
-type ErrorResponse struct {
-	StatusCode int    `json:"-" xml:"-"`
-	Err        *Error `json:"error" xml:"error"`
-}
-
-// Error returns the error message from the underlying error
-func (e *ErrorResponse) Error() string {
-	return e.Err.Message
-}
-
-// Render renders a single error and respond to the client request.
-func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	if e.StatusCode <= 0 {
-		e.StatusCode = http.StatusInternalServerError
-	}
-
-	e.Err = e.Err.prepare()
-
-	if e.Err.Code <= 0 {
-		e.Err.Code = ErrUnknown
-	}
-
-	render.Status(r, e.StatusCode)
 	return nil
 }

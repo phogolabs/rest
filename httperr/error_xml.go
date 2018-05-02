@@ -1,4 +1,4 @@
-package rho
+package httperr
 
 import (
 	"encoding/xml"
@@ -11,11 +11,11 @@ const (
 	xmlMarshalMsg   = "Unable to marshal xml"
 )
 
-// XMLError creates a ErrorResponse for given xml error
-func XMLError(err error) *ErrorResponse {
-	response := &ErrorResponse{
+// XMLError creates a Response for given xml error
+func XMLError(err error) *Response {
+	response := &Response{
 		StatusCode: http.StatusInternalServerError,
-		Err:        NewError(ErrInternal, xmlMsg),
+		Err:        New(ErrInternal, xmlMsg),
 	}
 
 	switch err.(type) {

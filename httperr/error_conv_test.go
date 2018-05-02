@@ -1,4 +1,4 @@
-package rho_test
+package httperr_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/phogolabs/rho"
+	"github.com/phogolabs/rho/httperr"
 )
 
 var _ = Describe("Conv Error", func() {
@@ -26,12 +26,12 @@ var _ = Describe("Conv Error", func() {
 	Context("when a time error occurs", func() {
 		It("handles the error correctly", func() {
 			err := &time.ParseError{}
-			rho.HandleErr(w, r, err)
+			httperr.Handle(w, r, err)
 
 			Expect(w.Code).To(Equal(http.StatusUnprocessableEntity))
 			payload := unmarshalErrResponse(w.Body)
 
-			Expect(payload).To(HaveKeyWithValue("code", float64(rho.ErrInvalid)))
+			Expect(payload).To(HaveKeyWithValue("code", float64(httperr.ErrInvalid)))
 			Expect(payload).To(HaveKeyWithValue("message", "Unable to parse date time"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
@@ -40,12 +40,12 @@ var _ = Describe("Conv Error", func() {
 	Context("when a num error occurs", func() {
 		It("handles the error correctly", func() {
 			err := &strconv.NumError{Err: fmt.Errorf("oh no!")}
-			rho.HandleErr(w, r, err)
+			httperr.Handle(w, r, err)
 
 			Expect(w.Code).To(Equal(http.StatusUnprocessableEntity))
 			payload := unmarshalErrResponse(w.Body)
 
-			Expect(payload).To(HaveKeyWithValue("code", float64(rho.ErrInvalid)))
+			Expect(payload).To(HaveKeyWithValue("code", float64(httperr.ErrInvalid)))
 			Expect(payload).To(HaveKeyWithValue("message", "Unable to parse number"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/phogolabs/rho/httperr"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -162,9 +163,9 @@ func URLQueryParamTimeOrValue(r *http.Request, key, format string, value time.Ti
 
 func queryParamRequiredErr(key string) error {
 	msg := fmt.Sprintf("Query Parameter '%s' is required", key)
-	err := &ErrorResponse{
+	err := &httperr.Response{
 		StatusCode: http.StatusBadRequest,
-		Err:        NewError(ErrParamRequired, msg),
+		Err:        httperr.New(httperr.ErrParamRequired, msg),
 	}
 	return err
 }
@@ -172,9 +173,9 @@ func queryParamRequiredErr(key string) error {
 func queryParamParseErr(key, tname string, err error, details ...string) error {
 	info := fmt.Sprintf("Query Parameter '%s' is not valid %s", key, tname)
 	message := append([]string{info}, details...)
-	errx := &ErrorResponse{
+	errx := &httperr.Response{
 		StatusCode: http.StatusUnprocessableEntity,
-		Err:        NewError(ErrParamInvalid, message...),
+		Err:        httperr.New(httperr.ErrParamInvalid, message...),
 	}
 	errx.Err.Wrap(err)
 	return errx

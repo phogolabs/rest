@@ -1,13 +1,11 @@
-package rho
+package httperr
 
 import (
 	"reflect"
 	"strings"
-
-	"github.com/go-openapi/inflect"
 )
 
-func typeName(data interface{}) string {
+func pkgName(data interface{}) string {
 	if data == nil {
 		return ""
 	}
@@ -26,12 +24,6 @@ func typeName(data interface{}) string {
 		typ = typ.Elem()
 	}
 
-	if typ.Kind() == reflect.Struct {
-		name := typ.Name()
-		name = inflect.Singularize(name)
-		name = strings.ToLower(name)
-		return name
-	}
-
-	return ""
+	parts := strings.SplitAfterN(typ.PkgPath(), "vendor/", 2)
+	return parts[len(parts)-1]
 }

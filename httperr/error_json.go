@@ -1,4 +1,4 @@
-package rho
+package httperr
 
 import (
 	"encoding/json"
@@ -11,11 +11,11 @@ const (
 	jsonMarshalMsg   = "Unable to marshal json"
 )
 
-// JSONError creates a ErrorResponse for given json error
-func JSONError(err error) *ErrorResponse {
-	response := &ErrorResponse{
+// JSONError creates a Response for given json error
+func JSONError(err error) *Response {
+	response := &Response{
 		StatusCode: http.StatusInternalServerError,
-		Err:        NewError(ErrInternal, jsonMsg),
+		Err:        New(ErrInternal, jsonMsg),
 	}
 
 	switch err.(type) {

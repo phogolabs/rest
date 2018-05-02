@@ -1,11 +1,9 @@
-package rho
+package httperr
 
 import (
 	"fmt"
-	"net/http"
 	"strings"
 
-	"github.com/go-chi/render"
 	"github.com/gosuri/uitable"
 )
 
@@ -57,9 +55,9 @@ type Error struct {
 	Details []string `json:"details,omitempty" xml:"details,omitempty"`
 }
 
-// NewError returns an error with error code and error messages provided in
+// New returns an error with error code and error messages provided in
 // function params
-func NewError(code int, msg ...string) *Error {
+func New(code int, msg ...string) *Error {
 	e := Error{Code: code}
 
 	count := len(msg)
@@ -131,45 +129,4 @@ func (e Error) prepare() *Error {
 	}
 
 	return err
-}
-
-// RespondErr responses with error
-func RespondErr(w http.ResponseWriter, r *http.Request, statusCode int, err *Error) {
-	response := &ErrorResponse{
-		StatusCode: statusCode,
-		Err:        err,
-	}
-
-	if err := render.Render(w, r, response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-// HandleErr handles the error based on pre-defined list of responses
-func HandleErr(w http.ResponseWriter, r *http.Request, err error) {
-	var response *ErrorResponse
-
-	switch pkgName(err) {
-	case "github.com/lib/pq":
-		response = PGError(err)
-	case "github.com/phogolabs/rho":
-		response = err.(*ErrorResponse)
-	case "encoding/json":
-		response = JSONError(err)
-	case "encoding/xml":
-		response = XMLError(err)
-	case "strconv":
-		response = ConvError(err)
-	case "time":
-		response = TimeError(err)
-	default:
-		response = &ErrorResponse{
-			StatusCode: http.StatusInternalServerError,
-			Err:        NewError(ErrUnknown, "Unknown Error").Wrap(err),
-		}
-	}
-
-	if err := render.Render(w, r, response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
 }
