@@ -5,11 +5,11 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/phogolabs/rho/httperr"
-	validate "gopkg.in/go-playground/validator.v9"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 // DefaultValidator is the default payload validator
-var DefaultValidator = validate.New()
+var DefaultValidator = validator.New()
 
 // Decode decodes a request into a struct
 func Decode(r *http.Request, v interface{}) error {
