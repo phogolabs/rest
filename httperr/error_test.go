@@ -73,13 +73,13 @@ var _ = Describe("HandleErr", func() {
 	Context("when the error is regular error", func() {
 		It("handles the error", func() {
 			err := fmt.Errorf("Oh no!")
-			httperr.Handle(w, r, err)
+			httperr.Respond(w, r, err)
 
 			Expect(w.Code).To(Equal(http.StatusInternalServerError))
 			payload := unmarshalErrResponse(w.Body)
 
-			Expect(payload).To(HaveKeyWithValue("code", float64(httperr.ErrUnknown)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unknown Error"))
+			Expect(payload).To(HaveKeyWithValue("code", float64(httperr.CodeInternal)))
+			Expect(payload).To(HaveKeyWithValue("message", "Internal Error"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -91,7 +91,7 @@ var _ = Describe("HandleErr", func() {
 				Err:        httperr.New(1, "Oh no!"),
 			}
 
-			httperr.Handle(w, r, err)
+			httperr.Respond(w, r, err)
 
 			Expect(w.Code).To(Equal(err.StatusCode))
 			payload := unmarshalErrResponse(w.Body)

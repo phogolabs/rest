@@ -31,34 +31,22 @@ func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	e.Err = e.Err.prepare()
 
 	if e.Err.Code <= 0 {
-		e.Err.Code = ErrUnknown
+		e.Err.Code = CodeInternal
 	}
 
 	render.Status(r, e.StatusCode)
 	return nil
 }
 
-// Respond responses with error
-func Respond(w http.ResponseWriter, r *http.Request, statusCode int, err *Error) {
-	response := &Response{
-		StatusCode: statusCode,
-		Err:        err,
-	}
-
-	if err := render.Render(w, r, response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
-
-// Handle handles the error based on pre-defined list of responses
-func Handle(w http.ResponseWriter, r *http.Request, err error) {
+// Respond handles the error based on pre-defined list of responses
+func Respond(w http.ResponseWriter, r *http.Request, err error) {
 	var response *Response
 
 	switch pkgName(err) {
 	case "github.com/lib/pq":
 		response = PGError(err)
 	case "github.com/phogolabs/rho/httperr":
-		response = err.(*Response)
+		response = HTTPError(err)
 	case "encoding/json":
 		response = JSONError(err)
 	case "encoding/xml":
@@ -68,13 +56,25 @@ func Handle(w http.ResponseWriter, r *http.Request, err error) {
 	case "time":
 		response = TimeError(err)
 	default:
-		response = &Response{
-			StatusCode: http.StatusInternalServerError,
-			Err:        New(ErrUnknown, "Unknown Error").Wrap(err),
-		}
+		response = New(CodeInternal, "Internal Error").With(http.StatusInternalServerError)
 	}
 
-	if err := render.Render(w, r, response); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	if err != response && err != response.Err {
+		response.Err.Wrap(err)
+	}
+
+	// Response never fails
+	_ = render.Render(w, r, response)
+}
+
+// HTTPError handles httperr
+func HTTPError(err error) *Response {
+	switch errx := err.(type) {
+	case *Response:
+		return errx
+	case *Error:
+		return errx.With(http.StatusInternalServerError)
+	default:
+		return nil
 	}
 }

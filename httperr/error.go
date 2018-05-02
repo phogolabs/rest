@@ -8,40 +8,42 @@ import (
 )
 
 const (
-	// ErrParamRequired is an error code returned when the parameter is missing
-	ErrParamRequired = 20101
-	// ErrParamInvalid is an error code returned when the parameter's value is an invalid
-	ErrParamInvalid = 20102
+	// CodeParamRequired is an error code returned when the parameter is missing
+	CodeParamRequired = 20101
+	// CodeParamInvalid is an error code returned when the parameter's value is an invalid
+	CodeParamInvalid = 20102
+	// CodeQueryParamRequired is an error code returned when the query parameter is missing
+	CodeQueryParamRequired = 20101
+	// CodeQueryParamInvalid is an error code returned when the query parameter's value is an invalid
+	CodeQueryParamInvalid = 20102
 )
 
 const (
-	// ErrUnknown when the error is unknown
-	ErrUnknown = 40000
-	// ErrConflict when the API request cannot be completed because the requested operation would conflict with an existing item.
-	ErrConflict = 40101
-	// ErrDuplicate when the requested operation failed because it tried to create a resource that already exists.
-	ErrDuplicate = 40102
-	// ErrDeleted when the request failed because the resource associated with the request has been deleted 410
-	ErrDeleted = 40103
-	// ErrConditionNotMet when the condition set in the request's was not met 416
-	ErrConditionNotMet = 40104
-	// ErrOutOfrange when the request specified a range that cannot be satisfied 428.
-	ErrOutOfrange = 40105
+	// CodeConflict when the API request cannot be completed because the requested operation would conflict with an existing item.
+	CodeConflict = 40101
+	// CodeDuplicate when the requested operation failed because it tried to create a resource that already exists.
+	CodeDuplicate = 40102
+	// CodeDeleted when the request failed because the resource associated with the request has been deleted 410
+	CodeDeleted = 40103
+	// CodeConditionNotMet when the condition set in the request's was not met 416
+	CodeConditionNotMet = 40104
+	// CodeOutOfrange when the request specified a range that cannot be satisfied 428.
+	CodeOutOfrange = 40105
 )
 
 const (
-	// ErrInvalid when the provided payload is invalid
-	ErrInvalid = 40222
-	// ErrBackend when a backend error occurred 503. Usually database.
-	ErrBackend = 40106
-	// ErrBackendNotConnected when the request failed due to a connection error.
-	ErrBackendNotConnected = 40107
-	// ErrNotReady code when the API server is not ready to accept requests.
-	ErrNotReady = 40108
-	// ErrInternal when the request failed due to an internal error 500.
-	ErrInternal = 40106
-	// ErrValidationError when the one or more field are validated
-	ErrValidationError = 40109
+	// CodeInternal when the request failed due to an internal error 500.
+	CodeInternal = 40106
+	// CodeInvalid when the provided payload is invalid
+	CodeInvalid = 40222
+	// CodeFieldInvalid when the struct field is invalid
+	CodeFieldInvalid = 40222
+	// CodeBackend when a backend error occurred 503. Usually database.
+	CodeBackend = 40106
+	// CodeBackendNotConnected when the request failed due to a connection error.
+	CodeBackendNotConnected = 40107
+	// CodeBackendNotReady code when the API server is not ready to accept requests.
+	CodeBackendNotReady = 40108
 )
 
 var _ error = &Error{}
@@ -70,6 +72,14 @@ func New(code int, msg ...string) *Error {
 	}
 
 	return &e
+}
+
+// With returns the error as Response Error
+func (e *Error) With(status int) *Response {
+	return &Response{
+		StatusCode: status,
+		Err:        e,
+	}
 }
 
 // Error returns the error message

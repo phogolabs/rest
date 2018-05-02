@@ -26,56 +26,40 @@ func PGError(err error) *Response {
 
 	switch pgErr.Code[:2] {
 	case pgConnClassErr:
-		response = &Response{
-			StatusCode: http.StatusInternalServerError,
-			Err:        New(ErrBackendNotConnected, "Connection Error"),
-		}
+		response = New(CodeBackendNotConnected, "Connection Error").With(http.StatusInternalServerError)
 	case pgDataClassErr:
 		response = PGDataError(pgErr)
 	case pgContraintClassErr:
 		response = PGIntegrityError(pgErr)
 	case pgOpIntClassErr:
-		response = &Response{
-			StatusCode: http.StatusInternalServerError,
-			Err:        New(ErrNotReady, "Operator Intervention"),
-		}
+		response = New(CodeBackendNotReady, "Operator Intervention").With(http.StatusInternalServerError)
 	default:
-		response = &Response{
-			StatusCode: http.StatusInternalServerError,
-			Err:        New(ErrBackend, "Database Error"),
-		}
+		response = New(CodeBackend, "Database Error").With(http.StatusInternalServerError)
 	}
 
-	response.Err.Wrap(err)
 	return response
 }
 
 // PGIntegrityError handles PG integrity errors
 func PGIntegrityError(err pq.Error) *Response {
-	errx := New(ErrConflict, "Integrity Constraint Violation")
+	errx := New(CodeConflict, "Integrity Constraint Violation")
 
 	switch err.Code {
 	// "23505": "unique_violation",
 	case "23505":
-		errx.Code = ErrDuplicate
+		errx.Code = CodeDuplicate
 	// "23514": "check_violation"
 	// "23P01": "exclusion_violation"
 	case "23514", "23P01":
-		errx.Code = ErrConditionNotMet
+		errx.Code = CodeConditionNotMet
 	}
 
-	response := &Response{
-		StatusCode: http.StatusConflict,
-		Err:        errx,
-	}
-
-	response.Err.Wrap(err)
-	return response
+	return errx.With(http.StatusConflict)
 }
 
 // PGDataError handles PG integrity errors
 func PGDataError(err pq.Error) *Response {
-	errx := New(ErrConflict, "Data Error")
+	errx := New(CodeConflict, "Data Error")
 
 	switch err.Code {
 	// "22003": "numeric_value_out_of_range",
@@ -84,18 +68,12 @@ func PGDataError(err pq.Error) *Response {
 	// "22022": "indicator_overflow",
 	// "22P01": "floating_point_exception",
 	case "22003", "22008", "22015", "22022", "22P01":
-		errx.Code = ErrOutOfrange
+		errx.Code = CodeOutOfrange
 	// "22004": "null_value_not_allowed",
 	// "22002": "null_value_no_indicator_parameter",
 	case "22002", "22004":
-		errx.Code = ErrConditionNotMet
+		errx.Code = CodeConditionNotMet
 	}
 
-	response := &Response{
-		StatusCode: http.StatusUnprocessableEntity,
-		Err:        errx,
-	}
-
-	response.Err.Wrap(err)
-	return response
+	return errx.With(http.StatusUnprocessableEntity)
 }

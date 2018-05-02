@@ -54,7 +54,7 @@ var _ = Describe("ErrResponse", func() {
 			err := httperr.New(0, "Oh no!")
 			response := &httperr.Response{Err: err}
 			Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
-			Expect(response.Err.Code).To(Equal(httperr.ErrUnknown))
+			Expect(response.Err.Code).To(Equal(httperr.CodeInternal))
 		})
 	})
 })
@@ -69,7 +69,7 @@ var _ = Describe("RespondErr", func() {
 	It("respond with the provided information", func() {
 		w := httptest.NewRecorder()
 		err := httperr.New(2000, "Oh no!")
-		httperr.Respond(w, r, http.StatusForbidden, err)
+		httperr.Respond(w, r, err.With(http.StatusForbidden))
 
 		Expect(w.Code).To(Equal(http.StatusForbidden))
 		Expect(w.Body.String()).To(ContainSubstring(`{"error":{"code":2000,"message":"Oh no!"}}`))
