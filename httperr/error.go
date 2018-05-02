@@ -7,43 +7,39 @@ import (
 	"github.com/gosuri/uitable"
 )
 
+const code = 10000
+
 const (
 	// CodeParamRequired is an error code returned when the parameter is missing
-	CodeParamRequired = 20101
+	CodeParamRequired = iota + code
 	// CodeParamInvalid is an error code returned when the parameter's value is an invalid
-	CodeParamInvalid = 20102
+	CodeParamInvalid = iota + code
 	// CodeQueryParamRequired is an error code returned when the query parameter is missing
-	CodeQueryParamRequired = 20101
+	CodeQueryParamRequired = iota + code
 	// CodeQueryParamInvalid is an error code returned when the query parameter's value is an invalid
-	CodeQueryParamInvalid = 20102
-)
-
-const (
+	CodeQueryParamInvalid = iota + code
 	// CodeConflict when the API request cannot be completed because the requested operation would conflict with an existing item.
-	CodeConflict = 40101
+	CodeConflict = iota + code
 	// CodeDuplicate when the requested operation failed because it tried to create a resource that already exists.
-	CodeDuplicate = 40102
+	CodeDuplicate = iota + code
 	// CodeDeleted when the request failed because the resource associated with the request has been deleted 410
-	CodeDeleted = 40103
+	CodeDeleted = iota + code
 	// CodeConditionNotMet when the condition set in the request's was not met 416
-	CodeConditionNotMet = 40104
+	CodeConditionNotMet = iota + code
 	// CodeOutOfrange when the request specified a range that cannot be satisfied 428.
-	CodeOutOfrange = 40105
-)
-
-const (
+	CodeOutOfrange = iota + code
 	// CodeInternal when the request failed due to an internal error 500.
-	CodeInternal = 40106
+	CodeInternal = iota + code
 	// CodeInvalid when the provided payload is invalid
-	CodeInvalid = 40222
+	CodeInvalid = iota + code
 	// CodeFieldInvalid when the struct field is invalid
-	CodeFieldInvalid = 40222
+	CodeFieldInvalid = iota + code
 	// CodeBackend when a backend error occurred 503. Usually database.
-	CodeBackend = 40106
+	CodeBackend = iota + code
 	// CodeBackendNotConnected when the request failed due to a connection error.
-	CodeBackendNotConnected = 40107
+	CodeBackendNotConnected = iota + code
 	// CodeBackendNotReady code when the API server is not ready to accept requests.
-	CodeBackendNotReady = 40108
+	CodeBackendNotReady = iota + code
 )
 
 var _ error = &Error{}
