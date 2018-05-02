@@ -9,5 +9,5 @@ import (
 
 func TestHttpware(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Httpware Suite")
+	RunSpecs(t, "HTTPWare Suite")
 }

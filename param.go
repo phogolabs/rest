@@ -16,7 +16,7 @@ func URLParamUUID(r *http.Request, key string) (uuid.UUID, error) {
 	param := chi.URLParam(r, key)
 
 	if param == "" {
-		return uuid.Nil, paramRequiredErr(key)
+		return uuid.Nil, httperr.ParamRequired(key)
 	}
 
 	value, err := uuid.FromString(param)
@@ -24,7 +24,7 @@ func URLParamUUID(r *http.Request, key string) (uuid.UUID, error) {
 		return value, nil
 	}
 
-	err = paramParseErr(key, "UUID", err)
+	err = httperr.ParamParse(key, "UUID", err)
 	return uuid.Nil, err
 }
 
@@ -49,7 +49,7 @@ func URLParamInt(r *http.Request, key string, base, bitSize int) (int64, error) 
 	param := chi.URLParam(r, key)
 
 	if param == "" {
-		return 0, paramRequiredErr(key)
+		return 0, httperr.ParamRequired(key)
 	}
 
 	value, err := strconv.ParseInt(param, base, bitSize)
@@ -57,7 +57,7 @@ func URLParamInt(r *http.Request, key string, base, bitSize int) (int64, error) 
 		return value, nil
 	}
 
-	err = paramParseErr(key, "integer number", err)
+	err = httperr.ParamParse(key, "integer number", err)
 	return 0, err
 }
 
@@ -77,7 +77,7 @@ func URLParamUint(r *http.Request, key string, base, bitSize int) (uint64, error
 	param := chi.URLParam(r, key)
 
 	if param == "" {
-		return 0, paramRequiredErr(key)
+		return 0, httperr.ParamRequired(key)
 	}
 
 	value, err := strconv.ParseUint(param, base, bitSize)
@@ -85,7 +85,7 @@ func URLParamUint(r *http.Request, key string, base, bitSize int) (uint64, error
 		return value, nil
 	}
 
-	err = paramParseErr(key, "unsigned integer number", err)
+	err = httperr.ParamParse(key, "unsigned integer number", err)
 	return 0, err
 }
 
@@ -105,7 +105,7 @@ func URLParamFloat(r *http.Request, key string, bitSize int) (float64, error) {
 	param := chi.URLParam(r, key)
 
 	if param == "" {
-		return 0, paramRequiredErr(key)
+		return 0, httperr.ParamRequired(key)
 	}
 
 	value, err := strconv.ParseFloat(param, bitSize)
@@ -113,7 +113,7 @@ func URLParamFloat(r *http.Request, key string, bitSize int) (float64, error) {
 		return value, nil
 	}
 
-	err = paramParseErr(key, "float number", err)
+	err = httperr.ParamParse(key, "float number", err)
 	return 0, err
 }
 
@@ -133,7 +133,7 @@ func URLParamTime(r *http.Request, key, format string) (time.Time, error) {
 	param := chi.URLParam(r, key)
 
 	if param == "" {
-		return time.Time{}, paramRequiredErr(key)
+		return time.Time{}, httperr.ParamRequired(key)
 	}
 
 	value, err := time.Parse(format, param)
@@ -142,7 +142,7 @@ func URLParamTime(r *http.Request, key, format string) (time.Time, error) {
 	}
 
 	info := fmt.Sprintf("Expected date time format '%s'", format)
-	err = paramParseErr(key, "date time", err, info)
+	err = httperr.ParamParse(key, "date time", err, info)
 	return time.Time{}, err
 }
 
@@ -155,23 +155,4 @@ func URLParamTimeOrValue(r *http.Request, key, format string, value time.Time) t
 	}
 
 	return param
-}
-
-func paramRequiredErr(key string) error {
-	msg := fmt.Sprintf("Parameter '%s' is required", key)
-	err := &httperr.Response{
-		StatusCode: http.StatusBadRequest,
-		Err:        httperr.New(httperr.CodeParamRequired, msg),
-	}
-	return err
-}
-
-func paramParseErr(key, tname string, err error, details ...string) error {
-	info := fmt.Sprintf("Parameter '%s' is not valid %s", key, tname)
-	errx := &httperr.Response{
-		StatusCode: http.StatusUnprocessableEntity,
-		Err:        httperr.New(httperr.CodeParamInvalid, info, details...),
-	}
-	errx.Err.Wrap(err)
-	return errx
 }

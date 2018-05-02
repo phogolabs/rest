@@ -92,3 +92,65 @@ var _ = Describe("HTTPWare", func() {
 		})
 	})
 })
+
+var _ = Describe("SetLogger", func() {
+	var logger log.Interface
+
+	BeforeEach(func() {
+		logger = log.Log
+	})
+
+	AfterEach(func() {
+		log.Log = logger
+	})
+
+	ItConfiguresTheLoggerSuccessfully := func(format string) {
+		Context(fmt.Sprintf("when the format is '%s'", format), func() {
+			It("configures the logger successfully", func() {
+				cfg := &httpware.LoggerConfig{
+					AppName:    "test",
+					AppVersion: "beta",
+					Format:     format,
+					Level:      "info",
+				}
+
+				buffer := &bytes.Buffer{}
+				Expect(httpware.SetLogger(buffer, cfg)).To(Succeed())
+
+				log.Info("hello")
+
+				Expect(buffer.String()).To(ContainSubstring("test"))
+				Expect(buffer.String()).To(ContainSubstring("beta"))
+			})
+		})
+	}
+
+	ItConfiguresTheLoggerSuccessfully("json")
+	ItConfiguresTheLoggerSuccessfully("text")
+	ItConfiguresTheLoggerSuccessfully("cli")
+
+	Context("when the format is not supported", func() {
+		It("returns an error", func() {
+			cfg := &httpware.LoggerConfig{
+				Format: "wrong",
+			}
+
+			buffer := &bytes.Buffer{}
+			Expect(httpware.SetLogger(buffer, cfg)).To(MatchError("unsupported log format 'wrong'"))
+		})
+	})
+
+	Context("when the level is wrong", func() {
+		It("returns an error", func() {
+			cfg := &httpware.LoggerConfig{
+				AppName:    "test",
+				AppVersion: "beta",
+				Format:     "text",
+				Level:      "wrong",
+			}
+
+			buffer := &bytes.Buffer{}
+			Expect(httpware.SetLogger(buffer, cfg)).To(MatchError("invalid level"))
+		})
+	})
+})

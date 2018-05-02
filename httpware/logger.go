@@ -1,18 +1,24 @@
 package httpware
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/apex/log"
+	"github.com/apex/log/handlers/cli"
+	"github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/text"
 	"github.com/go-chi/chi/middleware"
 )
 
 var (
 	// DefaultLogFormatter is the default log formatter
 	DefaultLogFormatter = LogFormatterFunc(NewLogEntry)
-	// DefaultLogger is the default logger
-	DefaultLogger = middleware.RequestLogger(DefaultLogFormatter)
+	// DefaultRequestLogger is the default logger
+	DefaultRequestLogger = middleware.RequestLogger(DefaultLogFormatter)
 )
 
 var (
@@ -24,7 +30,53 @@ var (
 // with some useful data about what was requested, what the response status was,
 // and how long it took to return.
 func Logger(next http.Handler) http.Handler {
-	return DefaultLogger(next)
+	return DefaultRequestLogger(next)
+}
+
+// LoggerConfig configures the logger
+type LoggerConfig struct {
+	// AppName is the application's name
+	AppName string
+	// AppVersion is the application's name
+	AppVersion string
+	// Level is the logger's level (info, error, debug, verbose and etc.)
+	Level string
+	// Format of the log (json, text or cli)
+	Format string
+}
+
+// SetLogger sets the logger
+func SetLogger(w io.Writer, cfg *LoggerConfig) error {
+	var handler log.Handler
+
+	switch strings.ToLower(cfg.Format) {
+	case "json":
+		handler = json.New(w)
+	case "text":
+		handler = text.New(w)
+	case "cli":
+		handler = cli.New(w)
+	default:
+		return fmt.Errorf("unsupported log format '%s'", cfg.Format)
+	}
+
+	log.SetHandler(handler)
+
+	level, err := log.ParseLevel(cfg.Level)
+	if err != nil {
+		return err
+	}
+
+	log.SetLevel(level)
+
+	log.Log = log.Log.WithFields(
+		log.Fields{
+			"app_name":    cfg.AppName,
+			"app_version": cfg.AppVersion,
+		},
+	)
+
+	return nil
 }
 
 // LogFormatterFunc is a function which implements middleware.LogFormatter
