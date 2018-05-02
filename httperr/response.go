@@ -3,6 +3,7 @@ package httperr
 import (
 	"net/http"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 )
 
@@ -28,12 +29,11 @@ func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
 		e.StatusCode = http.StatusInternalServerError
 	}
 
-	e.Err = e.Err.prepare()
-
-	if e.Err.Code <= 0 {
-		e.Err.Code = CodeInternal
+	if logEntry := middleware.GetLogEntry(r); logEntry != nil {
+		logEntry.Panic(e.Err, nil)
 	}
 
+	e.Err = e.Err.prepare()
 	render.Status(r, e.StatusCode)
 	return nil
 }
@@ -60,7 +60,8 @@ func Respond(w http.ResponseWriter, r *http.Request, err error) {
 	}
 
 	if err != response && err != response.Err {
-		response.Err.Wrap(err)
+		response.Err.Reason = err
+		response.Err.Stack = NewStack().StackTrace()
 	}
 
 	// Response never fails

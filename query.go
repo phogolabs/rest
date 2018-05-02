@@ -172,10 +172,9 @@ func queryParamRequiredErr(key string) error {
 
 func queryParamParseErr(key, tname string, err error, details ...string) error {
 	info := fmt.Sprintf("Query Parameter '%s' is not valid %s", key, tname)
-	message := append([]string{info}, details...)
 	errx := &httperr.Response{
 		StatusCode: http.StatusUnprocessableEntity,
-		Err:        httperr.New(httperr.CodeQueryParamInvalid, message...),
+		Err:        httperr.New(httperr.CodeQueryParamInvalid, info, details...),
 	}
 	errx.Err.Wrap(err)
 	return errx

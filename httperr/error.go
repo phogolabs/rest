@@ -2,9 +2,9 @@ package httperr
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/gosuri/uitable"
+	"github.com/apex/log"
+	"github.com/pkg/errors"
 )
 
 const code = 10000
@@ -42,32 +42,35 @@ const (
 	CodeBackendNotReady = iota + code
 )
 
-var _ error = &Error{}
+var (
+	_ error       = &Error{}
+	_ log.Fielder = &Error{}
+)
 
 // Error is a more feature rich implementation of error interface inspired
 // by PostgreSQL error style guide
 type Error struct {
-	Code    int      `json:"code,omitempty" xml:"code,omitempty"`
-	Message string   `json:"message" xml:"message"`
-	Reason  error    `json:"reason,omitempty" xml:"reason,omitempty"`
-	Details []string `json:"details,omitempty" xml:"details,omitempty"`
+	Code    int               `json:"code,omitempty" xml:"code,omitempty"`
+	Message string            `json:"message" xml:"message"`
+	Reason  error             `json:"reason,omitempty" xml:"reason,omitempty"`
+	Details []string          `json:"details,omitempty" xml:"details,omitempty"`
+	Stack   errors.StackTrace `json:"-" xml:"-"`
 }
 
 // New returns an error with error code and error messages provided in
 // function params
-func New(code int, msg ...string) *Error {
-	e := Error{Code: code}
-
-	count := len(msg)
-	if count > 0 {
-		e.Message = msg[0]
+func New(code int, msg string, details ...string) *Error {
+	return &Error{
+		Code:    code,
+		Message: msg,
+		Details: details,
+		Stack:   NewStack().StackTrace(),
 	}
+}
 
-	if count > 1 {
-		e.Details = msg[1:]
-	}
-
-	return &e
+// StackTrace returns the stack trace
+func (e *Error) StackTrace() errors.StackTrace {
+	return e.Stack
 }
 
 // With returns the error as Response Error
@@ -80,27 +83,41 @@ func (e *Error) With(status int) *Response {
 
 // Error returns the error message
 func (e *Error) Error() string {
-	table := uitable.New()
-	table.MaxColWidth = 80
-	table.Wrap = true
+	return e.Message
+}
 
-	table.AddRow("code:", fmt.Sprintf("%d", e.Code))
-	table.AddRow("message:", e.Message)
+// Fields returns the fields that should be logged
+func (e *Error) Fields() log.Fields {
+	fields := log.Fields{}
 
-	if len(e.Details) > 0 {
-		table.AddRow("details:", strings.Join(e.Details, ", "))
+	if e.Code > 0 {
+		fields["code"] = e.Code
 	}
 
 	if e.Reason != nil {
-		table.AddRow("reason:", e.Reason.Error())
+		switch errx := e.Reason.(type) {
+		case *Error:
+			inner := errx.Fields()
+			inner["message"] = errx.Message
+
+			fields["reason"] = inner
+		default:
+			fields["reason"] = errx.Error()
+		}
 	}
 
-	return table.String()
+	for index, msg := range e.Details {
+		key := fmt.Sprintf("details[%d]", index)
+		fields[key] = msg
+	}
+
+	return fields
 }
 
 // Wrap wraps the actual error
 func (e *Error) Wrap(err error) *Error {
 	e.Reason = err
+	e.Stack = NewStack().StackTrace()
 	return e
 }
 
@@ -122,6 +139,10 @@ func (e Error) prepare() *Error {
 		Code:    e.Code,
 		Message: e.Message,
 		Details: e.Details,
+	}
+
+	if err.Code <= 0 {
+		err.Code = CodeInternal
 	}
 
 	if e.Reason == nil {
