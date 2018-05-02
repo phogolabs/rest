@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/apex/log"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/phogolabs/rho/httperr"
@@ -16,6 +17,33 @@ var _ = Describe("Error", func() {
 		Expect(err.Message).To(Equal("Oh no!"))
 		Expect(err.Details).To(HaveLen(1))
 		Expect(err.Details).To(ContainElement("Unexpected error"))
+	})
+
+	It("reports the stack trace correctly", func() {
+		err := httperr.New(201, "Oh no!", "Unexpected error")
+		Expect(fmt.Sprintf("%v", err.StackTrace())).To(ContainSubstring("error_test.go"))
+	})
+
+	It("returns the fields correctly", func() {
+		leaf := fmt.Errorf("Inner Error")
+
+		err := httperr.New(201, "Oh no!", "Unexpected error")
+		err.Wrap(httperr.New(202, "Madness").Wrap(leaf))
+
+		fields := err.Fields()
+
+		Expect(fields).To(HaveKeyWithValue("code", 201))
+		Expect(fields).NotTo(HaveKey("message"))
+		Expect(fields).To(HaveKeyWithValue("details[0]", "Unexpected error"))
+		Expect(fields).To(HaveKey("reason"))
+
+		rfields, ok := fields["reason"].(log.Fields)
+		Expect(ok).To(BeTrue())
+
+		Expect(rfields).To(HaveKeyWithValue("code", 202))
+		Expect(rfields).To(HaveKeyWithValue("message", "Madness"))
+		Expect(rfields).NotTo(HaveKey("details[0]"))
+		Expect(rfields).To(HaveKeyWithValue("reason", "Inner Error"))
 	})
 
 	It("wraps the error successfully", func() {

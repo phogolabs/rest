@@ -95,15 +95,18 @@ func (e *Error) Fields() log.Fields {
 	}
 
 	if e.Reason != nil {
+		var reason interface{}
+
 		switch errx := e.Reason.(type) {
 		case *Error:
 			inner := errx.Fields()
 			inner["message"] = errx.Message
-
-			fields["reason"] = inner
+			reason = inner
 		default:
-			fields["reason"] = errx.Error()
+			reason = errx.Error()
 		}
+
+		fields["reason"] = reason
 	}
 
 	for index, msg := range e.Details {

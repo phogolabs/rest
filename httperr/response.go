@@ -76,6 +76,6 @@ func HTTPError(err error) *Response {
 	case *Error:
 		return errx.With(http.StatusInternalServerError)
 	default:
-		return nil
+		return New(CodeInternal, "Internal Error").With(http.StatusInternalServerError)
 	}
 }

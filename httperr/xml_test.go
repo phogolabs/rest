@@ -2,6 +2,7 @@ package httperr_test
 
 import (
 	"encoding/xml"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -20,6 +21,15 @@ var _ = Describe("XML Error", func() {
 	BeforeEach(func() {
 		w = httptest.NewRecorder()
 		r = httptest.NewRequest("GET", "http://example.com", nil)
+	})
+
+	Context("when the err is not recognized", func() {
+		It("handles the error correctly", func() {
+			errx := httperr.XMLError(fmt.Errorf("Oh no!"))
+			Expect(errx.StatusCode).To(Equal(http.StatusInternalServerError))
+			Expect(errx.Err.Code).To(Equal(httperr.CodeInternal))
+			Expect(errx.Err.Message).To(Equal("XML Error"))
+		})
 	})
 
 	Context("when the err is xml.UnmarshalError", func() {

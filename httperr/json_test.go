@@ -24,6 +24,15 @@ var _ = Describe("JSON Error", func() {
 		r = httptest.NewRequest("GET", "http://example.com", nil)
 	})
 
+	Context("when the err is not recognized", func() {
+		It("handles the error correctly", func() {
+			errx := httperr.JSONError(fmt.Errorf("Oh no!"))
+			Expect(errx.StatusCode).To(Equal(http.StatusInternalServerError))
+			Expect(errx.Err.Code).To(Equal(httperr.CodeInternal))
+			Expect(errx.Err.Message).To(Equal("JSON Error"))
+		})
+	})
+
 	Context("when the err is json.InvalidUnmarshalError", func() {
 		It("handles the error correctly", func() {
 			err := &json.InvalidUnmarshalError{Type: reflect.TypeOf(r)}
