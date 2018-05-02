@@ -118,3 +118,12 @@ var _ = Describe("HandleErr", func() {
 		})
 	})
 })
+
+var _ = Describe("MultiErr", func() {
+	It("returns the all error messages", func() {
+		m := httperr.MultiError{}
+		m = append(m, httperr.New(1, "Oh no!"))
+		m = append(m, httperr.New(2, "Oh yes!"))
+		Expect(m).To(MatchError("Oh no!;Oh yes!"))
+	})
+})

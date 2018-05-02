@@ -26,8 +26,7 @@ func Decode(r *http.Request, v interface{}) error {
 	}
 
 	if err := DefaultValidator.Struct(v); err != nil {
-		errx := httperr.New(httperr.CodeConditionNotMet, "Unable to validate request")
-		return errx.Wrap(err).With(http.StatusUnprocessableEntity)
+		return httperr.ValidationError(err, "Unable to validate request")
 	}
 
 	return nil

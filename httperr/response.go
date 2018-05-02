@@ -29,11 +29,14 @@ func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
 		e.StatusCode = http.StatusInternalServerError
 	}
 
+	err := e.Err.prepare()
+
+	e.Err = err
+
 	if logEntry := middleware.GetLogEntry(r); logEntry != nil {
 		logEntry.Panic(e.Err, nil)
 	}
 
-	e.Err = e.Err.prepare()
 	render.Status(r, e.StatusCode)
 	return nil
 }
@@ -55,17 +58,23 @@ func Respond(w http.ResponseWriter, r *http.Request, err error) {
 		response = ConvError(err)
 	case "time":
 		response = TimeError(err)
+	case "gopkg.in/go-playground/validator.v9":
+		response = ValidationError(err)
 	default:
 		response = New(CodeInternal, "Internal Error").With(http.StatusInternalServerError)
 	}
 
-	if err != response && err != response.Err {
-		response.Err.Reason = err
-		response.Err.Stack = NewStack().StackTrace()
-	}
+	prepare(response, err)
 
 	// Response never fails
 	_ = render.Render(w, r, response)
+}
+
+func prepare(response *Response, err error) {
+	if err != response && err != response.Err && response.Err.Reason == nil {
+		response.Err.Reason = err
+		response.Err.Stack = NewStack().StackTrace()
+	}
 }
 
 // HTTPError handles httperr

@@ -2,6 +2,7 @@ package httperr
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/apex/log"
 	"github.com/pkg/errors"
@@ -47,6 +48,26 @@ var (
 	_ log.Fielder = &Error{}
 )
 
+// MultiError represents a multi error
+type MultiError []*Error
+
+// Error returns the error message
+func (m MultiError) Error() string {
+	messages := []string{}
+	for _, err := range m {
+		messages = append(messages, err.Error())
+	}
+	return strings.Join(messages, ";")
+}
+
+func (m MultiError) prepare() MultiError {
+	errs := MultiError{}
+	for _, merr := range m {
+		errs = append(errs, merr.prepare())
+	}
+	return errs
+}
+
 // Error is a more feature rich implementation of error interface inspired
 // by PostgreSQL error style guide
 type Error struct {
@@ -60,6 +81,10 @@ type Error struct {
 // New returns an error with error code and error messages provided in
 // function params
 func New(code int, msg string, details ...string) *Error {
+	if code <= 0 {
+		code = CodeInternal
+	}
+
 	return &Error{
 		Code:    code,
 		Message: msg,
@@ -144,17 +169,16 @@ func (e Error) prepare() *Error {
 		Details: e.Details,
 	}
 
-	if err.Code <= 0 {
-		err.Code = CodeInternal
-	}
-
 	if e.Reason == nil {
 		return err
 	}
 
-	if reason, ok := e.Reason.(*Error); ok {
-		err.Reason = reason.prepare()
-	} else {
+	switch errx := e.Reason.(type) {
+	case *Error:
+		err.Reason = errx.prepare()
+	case MultiError:
+		err.Reason = errx.prepare()
+	default:
 		err.Reason = &Error{Message: e.Reason.Error()}
 	}
 
