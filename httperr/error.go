@@ -1,6 +1,7 @@
 package httperr
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -48,16 +49,55 @@ var (
 	_ log.Fielder = &Error{}
 )
 
+// FieldsFormatter are the error log fields
+type FieldsFormatter log.Fields
+
+// String returns the fields as string
+func (f FieldsFormatter) String() string {
+	buffer := &bytes.Buffer{}
+	fields := log.Fields(f)
+
+	for index, name := range fields.Names() {
+		if index > 0 {
+			fmt.Fprint(buffer, " ")
+		}
+		fmt.Fprintf(buffer, "%v:%v", name, fields.Get(name))
+	}
+
+	return fmt.Sprintf("[%s]", buffer.String())
+}
+
+// Add adds key to the formatter
+func (f FieldsFormatter) Add(key string, value interface{}) FieldsFormatter {
+	fields := log.Fields(f)
+	fields[key] = value
+	return f
+}
+
 // MultiError represents a multi error
 type MultiError []*Error
 
 // Error returns the error message
 func (m MultiError) Error() string {
-	messages := []string{}
+	var messages []string
+
 	for _, err := range m {
 		messages = append(messages, err.Error())
 	}
+
 	return strings.Join(messages, ";")
+}
+
+// Fields returns all fields that should be logged
+func (m MultiError) Fields() log.Fields {
+	fields := log.Fields{}
+
+	for index, err := range m {
+		key := fmt.Sprintf("errors[%d]", index)
+		fields[key] = FieldsFormatter(err.Fields()).Add("message", err.Message)
+	}
+
+	return fields
 }
 
 func (m MultiError) prepare() MultiError {
@@ -93,6 +133,11 @@ func New(code int, msg string, details ...string) *Error {
 	}
 }
 
+// Error returns the error message
+func (e *Error) Error() string {
+	return e.Message
+}
+
 // StackTrace returns the stack trace
 func (e *Error) StackTrace() errors.StackTrace {
 	return e.Stack
@@ -104,11 +149,6 @@ func (e *Error) With(status int) *Response {
 		StatusCode: status,
 		Err:        e,
 	}
-}
-
-// Error returns the error message
-func (e *Error) Error() string {
-	return e.Message
 }
 
 // Fields returns the fields that should be logged
@@ -124,9 +164,9 @@ func (e *Error) Fields() log.Fields {
 
 		switch errx := e.Reason.(type) {
 		case *Error:
-			inner := errx.Fields()
-			inner["message"] = errx.Message
-			reason = inner
+			reason = FieldsFormatter(errx.Fields()).Add("message", errx.Message)
+		case MultiError:
+			reason = FieldsFormatter(errx.Fields())
 		default:
 			reason = errx.Error()
 		}

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/apex/log"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/phogolabs/rho/httperr"
@@ -37,7 +36,7 @@ var _ = Describe("Error", func() {
 		Expect(fields).To(HaveKeyWithValue("details[0]", "Unexpected error"))
 		Expect(fields).To(HaveKey("reason"))
 
-		rfields, ok := fields["reason"].(log.Fields)
+		rfields, ok := fields["reason"].(httperr.FieldsFormatter)
 		Expect(ok).To(BeTrue())
 
 		Expect(rfields).To(HaveKeyWithValue("code", 202))
@@ -75,7 +74,7 @@ var _ = Describe("Error", func() {
 	})
 })
 
-var _ = Describe("HandleErr", func() {
+var _ = Describe("Respond", func() {
 	var (
 		r *http.Request
 		w *httptest.ResponseRecorder
@@ -119,11 +118,46 @@ var _ = Describe("HandleErr", func() {
 	})
 })
 
+var _ = Describe("Error", func() {
+	It("returns the all error messages", func() {
+		m := httperr.MultiError{}
+		m = append(m, httperr.New(1, "Oh no!"))
+		m = append(m, httperr.New(2, "Oh yes!"))
+
+		err := httperr.New(1, "A lot of errors!")
+		err.Wrap(m)
+
+		f := err.Fields()
+		Expect(f).To(HaveKeyWithValue("code", 1))
+		Expect(f).To(HaveKey("reason"))
+		Expect(f["reason"]).To(HaveKey("errors[0]"))
+		Expect(f["reason"]).To(HaveKey("errors[1]"))
+		Expect(f).NotTo(HaveKey("message"))
+	})
+})
+
 var _ = Describe("MultiErr", func() {
 	It("returns the all error messages", func() {
 		m := httperr.MultiError{}
 		m = append(m, httperr.New(1, "Oh no!"))
 		m = append(m, httperr.New(2, "Oh yes!"))
 		Expect(m).To(MatchError("Oh no!;Oh yes!"))
+
+		f := m.Fields()
+		Expect(f).To(HaveKey("errors[0]"))
+		Expect(f).To(HaveKey("errors[1]"))
+	})
+})
+
+var _ = Describe("FieldsFormatter", func() {
+	It("formats the fields successfully", func() {
+		f := httperr.FieldsFormatter{"id": 1, "name": "root"}
+		Expect(f.String()).To(Equal("[id:1 name:root]"))
+	})
+
+	It("adds a new field successfully", func() {
+		f := httperr.FieldsFormatter{"id": 1, "name": "root"}
+		f.Add("pass", "swordfish")
+		Expect(f).To(HaveKeyWithValue("pass", "swordfish"))
 	})
 })

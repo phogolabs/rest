@@ -20,7 +20,7 @@ type Response struct {
 
 // Error returns the error message from the underlying error
 func (e *Response) Error() string {
-	return e.Err.Message
+	return e.Err.Error()
 }
 
 // Render renders a single error and respond to the client request.
@@ -29,9 +29,7 @@ func (e *Response) Render(w http.ResponseWriter, r *http.Request) error {
 		e.StatusCode = http.StatusInternalServerError
 	}
 
-	err := e.Err.prepare()
-
-	e.Err = err
+	e.Err = e.Err.prepare()
 
 	if logEntry := middleware.GetLogEntry(r); logEntry != nil {
 		logEntry.Panic(e.Err, nil)
