@@ -195,7 +195,7 @@ var _ = Describe("PostgreSQL Error", func() {
 		})
 	})
 
-	Context("Class 57 - Operation Intervation", func() {
+	Context("Class 57 - Operation", func() {
 		It("handles the error correctly", func() {
 			err := pq.Error{Code: "57P01"}
 			httperr.Respond(w, r, err)
