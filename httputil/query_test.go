@@ -1,269 +1,272 @@
-package rho_test
+package httputil_test
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"time"
 
-	"github.com/go-chi/chi"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/phogolabs/rho"
 	"github.com/phogolabs/rho/httperr"
+	"github.com/phogolabs/rho/httputil"
 	uuid "github.com/satori/go.uuid"
 )
 
-var _ = Describe("Param", func() {
-	var (
-		r   *http.Request
-		ctx *chi.Context
-	)
+var _ = Describe("Query", func() {
+	var r *http.Request
 
 	BeforeEach(func() {
-		ctx = chi.NewRouteContext()
-	})
-
-	JustBeforeEach(func() {
 		r = httptest.NewRequest("GET", "http://example.com", nil)
-		r = r.WithContext(context.WithValue(r.Context(), chi.RouteCtxKey, ctx))
 	})
 
-	Describe("URLParamUUID", func() {
+	addQueryParam := func(key, value string) {
+		q := r.URL.Query()
+		q.Add(key, value)
+		r.URL.RawQuery = q.Encode()
+	}
+
+	Describe("URLQueryParam", func() {
+		It("returns the value successfully", func() {
+			addQueryParam("name", "Jack")
+			Expect(httputil.URLQueryParam(r, "name")).To(Equal("Jack"))
+		})
+	})
+
+	Describe("URLQueryParamUUID", func() {
 		It("parses the values successfully", func() {
 			id := uuid.NewV4()
-			ctx.URLParams.Add("id", id.String())
+			addQueryParam("id", id.String())
 
-			value, err := rho.URLParamUUID(r, "id")
+			value, err := httputil.URLQueryParamUUID(r, "id")
 			Expect(err).To(BeNil())
 			Expect(value).To(Equal(id))
 		})
 
 		Context("when the parameter is missing", func() {
 			It("returns an error response", func() {
-				value, err := rho.URLParamUUID(r, "id")
+				value, err := httputil.URLQueryParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'id' is required"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'id' is required"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
 		})
 
 		Context("when the parameter is malformed", func() {
 			It("returns an error response", func() {
-				ctx.URLParams.Add("id", "wrong-uuid")
+				addQueryParam("id", "wrong-uuid")
 
-				value, err := rho.URLParamUUID(r, "id")
+				value, err := httputil.URLQueryParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'id' is not valid UUID"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'id' is not valid UUID"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
 
 			It("returns a nil value", func() {
-				ctx.URLParams.Add("id", "wrong-uuid")
-				Expect(rho.URLParamUUIDOrNil(r, "id")).To(Equal(uuid.Nil))
+				addQueryParam("id", "wrong-uuid")
+				Expect(httputil.URLQueryParamUUIDOrNil(r, "id")).To(Equal(uuid.Nil))
 			})
 
 			It("returns the provided value", func() {
 				id := uuid.NewV4()
-				ctx.URLParams.Add("id", "wrong-uuid")
-				Expect(rho.URLParamUUIDOrValue(r, "id", id)).To(Equal(id))
+				addQueryParam("id", "wrong-uuid")
+				Expect(httputil.URLQueryParamUUIDOrValue(r, "id", id)).To(Equal(id))
 			})
 		})
 	})
 
-	Describe("URLParamInt", func() {
+	Describe("URLQueryParamInt", func() {
 		It("parses the values successfully", func() {
 			num := int64(123)
-			ctx.URLParams.Add("num", "123")
+			addQueryParam("num", "123")
 
-			value, err := rho.URLParamInt(r, "num", 0, 64)
+			value, err := httputil.URLQueryParamInt(r, "num", 0, 64)
 			Expect(err).To(BeNil())
 			Expect(value).To(Equal(num))
 		})
 
 		Context("when the parameter is missing", func() {
 			It("returns an error response", func() {
-				value, err := rho.URLParamInt(r, "num", 0, 64)
+				value, err := httputil.URLQueryParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is required"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'num' is required"))
 				Expect(value).To(Equal(int64(0)))
 			})
 		})
 
 		Context("when the parameter is malformed", func() {
 			It("returns an error response", func() {
-				ctx.URLParams.Add("num", "number")
+				addQueryParam("num", "number")
 
-				value, err := rho.URLParamInt(r, "num", 0, 64)
+				value, err := httputil.URLQueryParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid integer number"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'num' is not valid integer number"))
 				Expect(value).To(Equal(int64(0)))
 			})
 
 			It("returns the provided value", func() {
 				value := int64(200)
-				ctx.URLParams.Add("num", "number")
-				Expect(rho.URLParamIntOrValue(r, "num", 0, 64, value)).To(Equal(value))
+				addQueryParam("num", "number")
+				Expect(httputil.URLQueryParamIntOrValue(r, "num", 0, 64, value)).To(Equal(value))
 			})
 		})
 	})
 
-	Describe("URLParamUint", func() {
+	Describe("URLQueryParamUint", func() {
 		It("parses the values successfully", func() {
 			num := uint64(123)
-			ctx.URLParams.Add("num", "123")
+			addQueryParam("num", "123")
 
-			value, err := rho.URLParamUint(r, "num", 0, 64)
+			value, err := httputil.URLQueryParamUint(r, "num", 0, 64)
 			Expect(err).To(BeNil())
 			Expect(value).To(Equal(num))
 		})
 
 		Context("when the parameter is negative", func() {
 			It("parses the values successfully", func() {
-				ctx.URLParams.Add("num", "-123")
+				addQueryParam("num", "-123")
 
-				value, err := rho.URLParamUint(r, "num", 0, 64)
+				value, err := httputil.URLQueryParamUint(r, "num", 0, 64)
 				Expect(err).NotTo(BeNil())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid unsigned integer number"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'num' is not valid unsigned integer number"))
 				Expect(value).To(Equal(uint64(0)))
 			})
 		})
 
 		Context("when the parameter is missing", func() {
 			It("returns an error response", func() {
-				value, err := rho.URLParamUint(r, "num", 0, 64)
+				value, err := httputil.URLQueryParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is required"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'num' is required"))
 				Expect(value).To(Equal(uint64(0)))
 			})
 
 			It("returns the provided value", func() {
 				value := uint64(200)
-				ctx.URLParams.Add("num", "number")
-				Expect(rho.URLParamUintOrValue(r, "num", 0, 64, value)).To(Equal(value))
+				addQueryParam("num", "number")
+				Expect(httputil.URLQueryParamUintOrValue(r, "num", 0, 64, value)).To(Equal(value))
 			})
 		})
 
 		Context("when the parameter is malformed", func() {
 			It("returns an error response", func() {
-				ctx.URLParams.Add("num", "number")
+				addQueryParam("num", "number")
 
-				value, err := rho.URLParamUint(r, "num", 0, 64)
+				value, err := httputil.URLQueryParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid unsigned integer number"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'num' is not valid unsigned integer number"))
 				Expect(value).To(Equal(uint64(0)))
 			})
 		})
 	})
 
-	Describe("URLParamFloat", func() {
+	Describe("URLQueryParamFloat", func() {
 		It("parses the values successfully", func() {
 			num := float64(123.11)
-			ctx.URLParams.Add("num", "123.11")
+			addQueryParam("num", "123.11")
 
-			value, err := rho.URLParamFloat(r, "num", 64)
+			value, err := httputil.URLQueryParamFloat(r, "num", 64)
 			Expect(err).To(BeNil())
 			Expect(value).To(Equal(num))
 		})
 
 		Context("when the parameter is missing", func() {
 			It("returns an error response", func() {
-				value, err := rho.URLParamFloat(r, "num", 64)
+				value, err := httputil.URLQueryParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is required"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'num' is required"))
 				Expect(value).To(Equal(float64(0)))
 			})
 		})
 
 		Context("when the parameter is malformed", func() {
 			It("returns an error response", func() {
-				ctx.URLParams.Add("num", "number")
+				addQueryParam("num", "number")
 
-				value, err := rho.URLParamFloat(r, "num", 64)
+				value, err := httputil.URLQueryParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'num' is not valid float number"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'num' is not valid float number"))
 				Expect(value).To(Equal(float64(0)))
 			})
 
 			It("returns the provided value", func() {
 				value := float64(200.10)
-				ctx.URLParams.Add("num", "number")
-				Expect(rho.URLParamFloatOrValue(r, "num", 64, value)).To(Equal(value))
+				// addQueryParam("num", "number")
+				Expect(httputil.URLQueryParamFloatOrValue(r, "num", 64, value)).To(Equal(value))
 			})
 		})
 	})
 
-	Describe("URLParamTime", func() {
+	Describe("URLQueryParamTime", func() {
 		It("parses the values successfully", func() {
 			now := time.Now()
-			ctx.URLParams.Add("from", now.Format(time.RFC3339Nano))
+			addQueryParam("from", now.Format(time.RFC3339Nano))
 
-			value, err := rho.URLParamTime(r, "from", time.RFC3339Nano)
+			value, err := httputil.URLQueryParamTime(r, "from", time.RFC3339Nano)
 			Expect(err).To(BeNil())
 			Expect(value).To(BeTemporally("==", now))
 		})
 
 		Context("when the parameter is missing", func() {
 			It("returns an error response", func() {
-				value, err := rho.URLParamTime(r, "from", time.RFC3339Nano)
+				value, err := httputil.URLQueryParamTime(r, "from", time.RFC3339Nano)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'from' is required"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'from' is required"))
 				Expect(value.IsZero()).To(BeTrue())
 			})
 		})
 
 		Context("when the parameter is malformed", func() {
 			It("returns an error response", func() {
-				ctx.URLParams.Add("from", "time")
+				addQueryParam("from", "time")
 
-				value, err := rho.URLParamTime(r, "from", time.RFC3339Nano)
+				value, err := httputil.URLQueryParamTime(r, "from", time.RFC3339Nano)
 				Expect(err).To(HaveOccurred())
 
 				rErr, ok := (err).(*httperr.Response)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr.Err.Message).To(Equal("Parameter 'from' is not valid date time"))
+				Expect(rErr.Err.Message).To(Equal("Query Parameter 'from' is not valid date time"))
 				Expect(rErr.Err.Details).To(HaveLen(1))
 				Expect(rErr.Err.Details[0]).To(Equal(fmt.Sprintf("Expected date time format '%s'", time.RFC3339Nano)))
 				Expect(value.IsZero()).To(BeTrue())
@@ -271,8 +274,8 @@ var _ = Describe("Param", func() {
 
 			It("returns the provided value", func() {
 				now := time.Now()
-				ctx.URLParams.Add("from", "time")
-				Expect(rho.URLParamTimeOrValue(r, "num", time.RFC3339Nano, now)).To(BeTemporally("==", now))
+				addQueryParam("from", "time")
+				Expect(httputil.URLQueryParamTimeOrValue(r, "num", time.RFC3339Nano, now)).To(BeTemporally("==", now))
 			})
 		})
 	})

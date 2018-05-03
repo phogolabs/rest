@@ -1,4 +1,4 @@
-package rho_test
+package httputil_test
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 func TestRho(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "RHO Suite")
+	RunSpecs(t, "HTTPUtil Suite")
 }
 
 type T struct {

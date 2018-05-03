@@ -96,7 +96,6 @@ type LogEntry struct {
 // NewLogEntry creates a new log entry
 func NewLogEntry(r *http.Request) *LogEntry {
 	logger := log.WithFields(log.Fields{
-		"host":       r.Host,
 		"url":        r.RequestURI,
 		"proto":      r.Proto,
 		"method":     r.Method,
