@@ -1,5 +1,5 @@
 hash: 87c13a8ddd4da0f4582931413b08ce3e00762d6dc715a0d0beb42bb7cc35b4d1
-updated: 2018-05-02T17:29:49.493408+01:00
+updated: 2018-05-03T09:16:33.474847+01:00
 imports:
 - name: github.com/apex/log
   version: 0296d6eb16bb28f8a0c55668affcf4876dc269be
@@ -70,7 +70,7 @@ testImports:
   - matchers/support/goraph/util
   - types
 - name: golang.org/x/net
-  version: 5f9ae10d9af5b1c89ae6904293b14b064d4ada23
+  version: 640f4622ab692b87c2f3a94265e6f579fe38263d
   subpackages:
   - html
   - html/atom
