@@ -43,19 +43,21 @@ type LoggerConfig struct {
 	Level string
 	// Format of the log (json, text or cli)
 	Format string
+	// Output of the log
+	Output io.Writer
 }
 
 // SetLogger sets the logger
-func SetLogger(w io.Writer, cfg *LoggerConfig) error {
+func SetLogger(cfg *LoggerConfig) error {
 	var handler log.Handler
 
 	switch strings.ToLower(cfg.Format) {
 	case "json":
-		handler = json.New(w)
+		handler = json.New(cfg.Output)
 	case "text":
-		handler = text.New(w)
+		handler = text.New(cfg.Output)
 	case "cli":
-		handler = cli.New(w)
+		handler = cli.New(cfg.Output)
 	default:
 		return fmt.Errorf("unsupported log format '%s'", cfg.Format)
 	}
