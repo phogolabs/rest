@@ -110,11 +110,13 @@ var _ = Describe("SetLogger", func() {
 				buffer := &bytes.Buffer{}
 
 				cfg := &httpware.LoggerConfig{
-					AppName:    "test",
-					AppVersion: "beta",
-					Format:     format,
-					Level:      "info",
-					Output:     buffer,
+					Fields: log.Fields{
+						"app_name":    "test",
+						"app_version": "beta",
+					},
+					Format: format,
+					Level:  "info",
+					Output: buffer,
 				}
 
 				Expect(httpware.SetLogger(cfg)).To(Succeed())
@@ -149,11 +151,13 @@ var _ = Describe("SetLogger", func() {
 			buffer := &bytes.Buffer{}
 
 			cfg := &httpware.LoggerConfig{
-				AppName:    "test",
-				AppVersion: "beta",
-				Format:     "text",
-				Level:      "wrong",
-				Output:     buffer,
+				Fields: log.Fields{
+					"app_name":    "test",
+					"app_version": "beta",
+				},
+				Format: "text",
+				Level:  "wrong",
+				Output: buffer,
 			}
 
 			Expect(httpware.SetLogger(cfg)).To(MatchError("invalid level"))

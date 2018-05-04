@@ -35,10 +35,8 @@ func Logger(next http.Handler) http.Handler {
 
 // LoggerConfig configures the logger
 type LoggerConfig struct {
-	// AppName is the application's name
-	AppName string
-	// AppVersion is the application's name
-	AppVersion string
+	// Fields of the root logger
+	Fields log.Fields
 	// Level is the logger's level (info, error, debug, verbose and etc.)
 	Level string
 	// Format of the log (json, text or cli)
@@ -70,13 +68,7 @@ func SetLogger(cfg *LoggerConfig) error {
 	}
 
 	log.SetLevel(level)
-
-	log.Log = log.Log.WithFields(
-		log.Fields{
-			"app_name":    cfg.AppName,
-			"app_version": cfg.AppVersion,
-		},
-	)
+	log.Log = log.Log.WithFields(cfg.Fields)
 
 	return nil
 }
