@@ -1,4 +1,4 @@
-package httperr
+package httpr
 
 import (
 	"net/http"
@@ -18,31 +18,40 @@ const (
 )
 
 // PGError creates a Response for given PostgreSQL error
-func PGError(err error) *Response {
+func PGError(err error) *ErrorResponse {
 	var (
 		pgErr    = err.(pq.Error)
-		response *Response
+		response *ErrorResponse
 	)
 
 	switch pgErr.Code[:2] {
 	case pgConnClassErr:
-		response = New(CodeBackendNotConnected, "Connection Error").With(http.StatusInternalServerError)
+		response = &ErrorResponse{
+			StatusCode: http.StatusInternalServerError,
+			Err:        NewError(CodeBackendNotConnected, "Connection Error").Wrap(err),
+		}
 	case pgDataClassErr:
 		response = PGDataError(pgErr)
 	case pgContraintClassErr:
 		response = PGIntegrityError(pgErr)
 	case pgOpIntClassErr:
-		response = New(CodeBackendNotReady, "Operator Intervention").With(http.StatusInternalServerError)
+		response = &ErrorResponse{
+			StatusCode: http.StatusInternalServerError,
+			Err:        NewError(CodeBackendNotReady, "Operator Intervention").Wrap(err),
+		}
 	default:
-		response = New(CodeBackend, "Database Error").With(http.StatusInternalServerError)
+		response = &ErrorResponse{
+			StatusCode: http.StatusInternalServerError,
+			Err:        NewError(CodeBackend, "Database Error").Wrap(err),
+		}
 	}
 
 	return response
 }
 
 // PGIntegrityError handles PG integrity errors
-func PGIntegrityError(err pq.Error) *Response {
-	errx := New(CodeConflict, "Integrity Constraint Violation")
+func PGIntegrityError(err pq.Error) *ErrorResponse {
+	errx := NewError(CodeConflict, "Integrity Constraint Violation")
 
 	switch err.Code {
 	// "23505": "unique_violation",
@@ -54,12 +63,17 @@ func PGIntegrityError(err pq.Error) *Response {
 		errx.Code = CodeConditionNotMet
 	}
 
-	return errx.With(http.StatusConflict)
+	response := &ErrorResponse{
+		StatusCode: http.StatusConflict,
+		Err:        errx.Wrap(err),
+	}
+
+	return response
 }
 
 // PGDataError handles PG integrity errors
-func PGDataError(err pq.Error) *Response {
-	errx := New(CodeConflict, "Data Error")
+func PGDataError(err pq.Error) *ErrorResponse {
+	errx := NewError(CodeConflict, "Data Error")
 
 	switch err.Code {
 	// "22003": "numeric_value_out_of_range",
@@ -75,5 +89,10 @@ func PGDataError(err pq.Error) *Response {
 		errx.Code = CodeConditionNotMet
 	}
 
-	return errx.With(http.StatusUnprocessableEntity)
+	response := &ErrorResponse{
+		StatusCode: http.StatusUnprocessableEntity,
+		Err:        errx.Wrap(err),
+	}
+
+	return response
 }

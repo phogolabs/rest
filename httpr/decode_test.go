@@ -1,4 +1,4 @@
-package httputil_test
+package httpr_test
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/phogolabs/rho/httputil"
+	"github.com/phogolabs/http/httpr"
 )
 
 var _ = Describe("Decode", func() {
@@ -29,7 +29,7 @@ var _ = Describe("Decode", func() {
 		Expect(json.NewEncoder(body).Encode(&t)).To(Succeed())
 
 		t2 := T{}
-		Expect(httputil.Decode(r, &t2)).To(Succeed())
+		Expect(httpr.Decode(r, &t2)).To(Succeed())
 		Expect(t2).To(Equal(t))
 	})
 
@@ -38,7 +38,7 @@ var _ = Describe("Decode", func() {
 			body.WriteString("wrong")
 
 			t := time.Now()
-			Expect(httputil.Decode(r, &t)).To(MatchError("Unable to unmarshal request body"))
+			Expect(httpr.Decode(r, &t)).To(MatchError("Unable to unmarshal request body"))
 		})
 	})
 
@@ -48,7 +48,7 @@ var _ = Describe("Decode", func() {
 			Expect(json.NewEncoder(body).Encode(&t)).To(Succeed())
 
 			t2 := T{}
-			Expect(httputil.Decode(r, &t2)).To(MatchError("Unable to bind request"))
+			Expect(httpr.Decode(r, &t2)).To(MatchError("Unable to bind request"))
 		})
 	})
 
@@ -58,7 +58,7 @@ var _ = Describe("Decode", func() {
 			Expect(json.NewEncoder(body).Encode(&t)).To(Succeed())
 
 			var t2 time.Time
-			Expect(httputil.Decode(r, &t2)).To(MatchError("Unable to validate request"))
+			Expect(httpr.Decode(r, &t2)).To(MatchError("Unable to validate request"))
 		})
 	})
 })

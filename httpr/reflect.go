@@ -1,4 +1,4 @@
-package httperr
+package httpr
 
 // Copied portions from github.com/pkg/errors which is BSD2, copied to avoid
 // pulling in dependency that would cause naming conflicts and import clashes
@@ -30,8 +30,11 @@ package httperr
 
 import (
 	"fmt"
+	"reflect"
 	"runtime"
+	"strings"
 
+	"github.com/go-openapi/inflect"
 	"github.com/pkg/errors"
 )
 
@@ -68,4 +71,56 @@ func (s *Stack) StackTrace() errors.StackTrace {
 		f[i] = errors.Frame((*s)[i])
 	}
 	return f
+}
+
+func pkgName(data interface{}) string {
+	if data == nil {
+		return ""
+	}
+
+	typ := reflect.TypeOf(data)
+
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	if typ.Kind() == reflect.Slice {
+		typ = typ.Elem()
+	}
+
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	parts := strings.SplitAfterN(typ.PkgPath(), "vendor/", 2)
+	return parts[len(parts)-1]
+}
+
+func typeName(data interface{}) string {
+	if data == nil {
+		return ""
+	}
+
+	typ := reflect.TypeOf(data)
+
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	if typ.Kind() == reflect.Slice {
+		typ = typ.Elem()
+	}
+
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	if typ.Kind() == reflect.Struct {
+		name := typ.Name()
+		name = inflect.Singularize(name)
+		name = strings.ToLower(name)
+		return name
+	}
+
+	return ""
 }

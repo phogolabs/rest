@@ -1,4 +1,4 @@
-package httputil_test
+package httpr_test
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/render"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/phogolabs/rho/httputil"
+	"github.com/phogolabs/http/httpr"
 )
 
 var _ = Describe("Response", func() {
@@ -19,7 +19,7 @@ var _ = Describe("Response", func() {
 	})
 
 	It("sets the status code successfully", func() {
-		response := &httputil.Response{StatusCode: http.StatusCreated}
+		response := &httpr.Response{StatusCode: http.StatusCreated}
 		Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
 		status, ok := r.Context().Value(render.StatusCtxKey).(int)
 		Expect(ok).To(BeTrue())
@@ -28,7 +28,7 @@ var _ = Describe("Response", func() {
 
 	Context("when the status code is not provided", func() {
 		It("sets the status code 200 successfully", func() {
-			response := &httputil.Response{}
+			response := &httpr.Response{}
 			Expect(response.StatusCode).To(BeZero())
 			Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
 			status, ok := r.Context().Value(render.StatusCtxKey).(int)
@@ -39,7 +39,7 @@ var _ = Describe("Response", func() {
 
 	Context("when the kind is set", func() {
 		It("does not set any kind", func() {
-			response := &httputil.Response{Data: time.Now()}
+			response := &httpr.Response{Data: time.Now()}
 			response.Meta.Kind = "test"
 			Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
 			Expect(response.Meta.Kind).To(Equal("test"))
@@ -49,7 +49,7 @@ var _ = Describe("Response", func() {
 	Context("when the kind is not set", func() {
 		Context("when the data is nil", func() {
 			It("does not set any kind", func() {
-				response := &httputil.Response{}
+				response := &httpr.Response{}
 				Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
 				Expect(response.Meta.Kind).To(BeEmpty())
 			})
@@ -57,7 +57,7 @@ var _ = Describe("Response", func() {
 
 		Context("when the data is struct", func() {
 			It("sets the kind successfully", func() {
-				response := &httputil.Response{Data: time.Now()}
+				response := &httpr.Response{Data: time.Now()}
 				Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
 				Expect(response.Meta.Kind).To(Equal("time"))
 			})
@@ -65,7 +65,7 @@ var _ = Describe("Response", func() {
 
 		Context("when the data is not struct", func() {
 			It("does not set the kind successfully", func() {
-				response := &httputil.Response{Data: 5}
+				response := &httpr.Response{Data: 5}
 				Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
 				Expect(response.Meta.Kind).To(Equal(""))
 			})
@@ -74,7 +74,7 @@ var _ = Describe("Response", func() {
 		Context("when the data is slice of struct", func() {
 			It("sets the kind successfully", func() {
 				arr := []*time.Time{}
-				response := &httputil.Response{Data: &arr}
+				response := &httpr.Response{Data: &arr}
 				Expect(response.Render(httptest.NewRecorder(), r)).To(Succeed())
 				Expect(response.Meta.Kind).To(Equal("time"))
 			})

@@ -1,4 +1,4 @@
-package httputil
+package httpr
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/phogolabs/rho/httperr"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -20,7 +19,7 @@ func URLQueryParamUUID(r *http.Request, key string) (uuid.UUID, error) {
 	param := URLQueryParam(r, key)
 
 	if param == "" {
-		return uuid.Nil, httperr.QueryParamRequired(key)
+		return uuid.Nil, queryParamRequired(key)
 	}
 
 	value, err := uuid.FromString(param)
@@ -28,7 +27,7 @@ func URLQueryParamUUID(r *http.Request, key string) (uuid.UUID, error) {
 		return value, nil
 	}
 
-	err = httperr.QueryParamParse(key, "UUID", err)
+	err = queryParamParse(key, "UUID", err)
 	return uuid.Nil, err
 }
 
@@ -53,7 +52,7 @@ func URLQueryParamInt(r *http.Request, key string, base, bitSize int) (int64, er
 	param := URLQueryParam(r, key)
 
 	if param == "" {
-		return 0, httperr.QueryParamRequired(key)
+		return 0, queryParamRequired(key)
 	}
 
 	value, err := strconv.ParseInt(param, base, bitSize)
@@ -61,7 +60,7 @@ func URLQueryParamInt(r *http.Request, key string, base, bitSize int) (int64, er
 		return value, nil
 	}
 
-	err = httperr.QueryParamParse(key, "integer number", err)
+	err = queryParamParse(key, "integer number", err)
 	return 0, err
 }
 
@@ -81,7 +80,7 @@ func URLQueryParamUint(r *http.Request, key string, base, bitSize int) (uint64, 
 	param := URLQueryParam(r, key)
 
 	if param == "" {
-		return 0, httperr.QueryParamRequired(key)
+		return 0, queryParamRequired(key)
 	}
 
 	value, err := strconv.ParseUint(param, base, bitSize)
@@ -89,7 +88,7 @@ func URLQueryParamUint(r *http.Request, key string, base, bitSize int) (uint64, 
 		return value, nil
 	}
 
-	err = httperr.QueryParamParse(key, "unsigned integer number", err)
+	err = queryParamParse(key, "unsigned integer number", err)
 	return 0, err
 }
 
@@ -109,7 +108,7 @@ func URLQueryParamFloat(r *http.Request, key string, bitSize int) (float64, erro
 	param := URLQueryParam(r, key)
 
 	if param == "" {
-		return 0, httperr.QueryParamRequired(key)
+		return 0, queryParamRequired(key)
 	}
 
 	value, err := strconv.ParseFloat(param, bitSize)
@@ -117,7 +116,7 @@ func URLQueryParamFloat(r *http.Request, key string, bitSize int) (float64, erro
 		return value, nil
 	}
 
-	err = httperr.QueryParamParse(key, "float number", err)
+	err = queryParamParse(key, "float number", err)
 	return 0, err
 }
 
@@ -137,7 +136,7 @@ func URLQueryParamTime(r *http.Request, key, format string) (time.Time, error) {
 	param := URLQueryParam(r, key)
 
 	if param == "" {
-		return time.Time{}, httperr.QueryParamRequired(key)
+		return time.Time{}, queryParamRequired(key)
 	}
 
 	value, err := time.Parse(format, param)
@@ -146,7 +145,7 @@ func URLQueryParamTime(r *http.Request, key, format string) (time.Time, error) {
 	}
 
 	info := fmt.Sprintf("Expected date time format '%s'", format)
-	err = httperr.QueryParamParse(key, "date time", err, info)
+	err = queryParamParse(key, "date time", err, info)
 	return time.Time{}, err
 }
 
@@ -159,4 +158,22 @@ func URLQueryParamTimeOrValue(r *http.Request, key, format string, value time.Ti
 	}
 
 	return param
+}
+
+func queryParamRequired(key string) error {
+	msg := fmt.Sprintf("Query Parameter '%s' is required", key)
+	err := &ErrorResponse{
+		StatusCode: http.StatusBadRequest,
+		Err:        NewError(CodeQueryParamRequired, msg),
+	}
+	return err
+}
+
+func queryParamParse(key, tname string, err error, details ...string) error {
+	info := fmt.Sprintf("Query Parameter '%s' is not valid %s", key, tname)
+	errx := &ErrorResponse{
+		StatusCode: http.StatusUnprocessableEntity,
+		Err:        NewError(CodeQueryParamInvalid, info, details...).Wrap(err),
+	}
+	return errx
 }

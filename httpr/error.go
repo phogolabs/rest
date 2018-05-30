@@ -1,4 +1,4 @@
-package httperr
+package httpr
 
 import (
 	"bytes"
@@ -44,10 +44,150 @@ const (
 	CodeBackendNotReady = iota + code
 )
 
+// Error represents an error that can be prepared for rendering
+type Error interface {
+	// Error returns the error message
+	Error() string
+	// Prepare prepares the error
+	Prepare() Error
+	// Fields returns the fields used by the logger
+	Fields() log.Fields
+}
+
 var (
-	_ error       = &Error{}
-	_ log.Fielder = &Error{}
+	_ Error = &HTTPError{}
+	_ Error = &MultiError{}
 )
+
+// MultiError represents a slice of errors
+type MultiError []Error
+
+// Error returns the error message
+func (e MultiError) Error() string {
+	msg := []string{}
+	for _, err := range e {
+		msg = append(msg, err.Error())
+	}
+
+	return strings.Join(msg, ";")
+}
+
+// Prepare prepares the error for rendering
+func (e MultiError) Prepare() Error {
+	merr := MultiError{}
+	for _, err := range e {
+		merr = append(merr, err.Prepare())
+	}
+	return merr
+}
+
+// Fields returns all fields that should be logged
+func (e MultiError) Fields() log.Fields {
+	fields := log.Fields{}
+
+	for index, err := range e {
+		key := fmt.Sprintf("errors[%d]", index)
+		fields[key] = reason(err)
+	}
+
+	return fields
+}
+
+// HTTPError is a more feature rich implementation of error interface inspired
+// by PostgreSQL error style guide
+type HTTPError struct {
+	Code    int               `json:"code,omitempty" xml:"code,omitempty"`
+	Message string            `json:"message" xml:"message"`
+	Reason  error             `json:"reason,omitempty" xml:"reason,omitempty"`
+	Details []string          `json:"details,omitempty" xml:"details,omitempty"`
+	Stack   errors.StackTrace `json:"-" xml:"-"`
+}
+
+// NewError returns an error with error code and error messages provided in
+// function params
+func NewError(code int, msg string, details ...string) *HTTPError {
+	if code <= 0 {
+		code = CodeInternal
+	}
+
+	return &HTTPError{
+		Code:    code,
+		Message: msg,
+		Details: details,
+		Stack:   NewStack().StackTrace(),
+	}
+}
+
+// Error returns the error message
+func (e *HTTPError) Error() string {
+	return e.Message
+}
+
+// StackTrace returns the stack trace
+func (e *HTTPError) StackTrace() errors.StackTrace {
+	return e.Stack
+}
+
+// Fields returns the fields that should be logged
+func (e *HTTPError) Fields() log.Fields {
+	fields := log.Fields{}
+
+	if e.Code > 0 {
+		fields["code"] = e.Code
+	}
+
+	if e.Reason != nil {
+		fields["reason"] = reason(e.Reason)
+	}
+
+	for index, msg := range e.Details {
+		key := fmt.Sprintf("details[%d]", index)
+		fields[key] = msg
+	}
+
+	return fields
+}
+
+// Wrap wraps the actual error
+func (e *HTTPError) Wrap(err error) *HTTPError {
+	e.Reason = err
+	e.Stack = NewStack().StackTrace()
+	return e
+}
+
+// Cause returns the real reason for the error
+func (e *HTTPError) Cause() error {
+	if e.Reason == nil {
+		return e
+	}
+
+	if reason, ok := e.Reason.(*HTTPError); ok {
+		return reason.Cause()
+	}
+
+	return e.Reason
+}
+
+// Prepare prepares the error for rendering
+func (e *HTTPError) Prepare() Error {
+	err := &HTTPError{
+		Code:    e.Code,
+		Message: e.Message,
+		Details: e.Details,
+	}
+
+	if e.Reason == nil {
+		return err
+	}
+
+	if perr, ok := e.Reason.(Error); ok {
+		err.Reason = perr.Prepare()
+	} else {
+		err.Reason = &HTTPError{Message: e.Reason.Error()}
+	}
+
+	return err
+}
 
 // FieldsFormatter are the error log fields
 type FieldsFormatter log.Fields
@@ -67,160 +207,20 @@ func (f FieldsFormatter) String() string {
 	return fmt.Sprintf("[%s]", buffer.String())
 }
 
+func reason(err error) interface{} {
+	switch errx := err.(type) {
+	case *HTTPError:
+		return FieldsFormatter(errx.Fields()).Add("message", errx.Message)
+	case MultiError:
+		return FieldsFormatter(errx.Fields())
+	default:
+		return errx.Error()
+	}
+}
+
 // Add adds key to the formatter
 func (f FieldsFormatter) Add(key string, value interface{}) FieldsFormatter {
 	fields := log.Fields(f)
 	fields[key] = value
 	return f
-}
-
-// MultiError represents a multi error
-type MultiError []*Error
-
-// Error returns the error message
-func (m MultiError) Error() string {
-	var messages []string
-
-	for _, err := range m {
-		messages = append(messages, err.Error())
-	}
-
-	return strings.Join(messages, ";")
-}
-
-// Fields returns all fields that should be logged
-func (m MultiError) Fields() log.Fields {
-	fields := log.Fields{}
-
-	for index, err := range m {
-		key := fmt.Sprintf("errors[%d]", index)
-		fields[key] = FieldsFormatter(err.Fields()).Add("message", err.Message)
-	}
-
-	return fields
-}
-
-func (m MultiError) prepare() MultiError {
-	errs := MultiError{}
-	for _, merr := range m {
-		errs = append(errs, merr.prepare())
-	}
-	return errs
-}
-
-// Error is a more feature rich implementation of error interface inspired
-// by PostgreSQL error style guide
-type Error struct {
-	Code    int               `json:"code,omitempty" xml:"code,omitempty"`
-	Message string            `json:"message" xml:"message"`
-	Reason  error             `json:"reason,omitempty" xml:"reason,omitempty"`
-	Details []string          `json:"details,omitempty" xml:"details,omitempty"`
-	Stack   errors.StackTrace `json:"-" xml:"-"`
-}
-
-// New returns an error with error code and error messages provided in
-// function params
-func New(code int, msg string, details ...string) *Error {
-	if code <= 0 {
-		code = CodeInternal
-	}
-
-	return &Error{
-		Code:    code,
-		Message: msg,
-		Details: details,
-		Stack:   NewStack().StackTrace(),
-	}
-}
-
-// Error returns the error message
-func (e *Error) Error() string {
-	return e.Message
-}
-
-// StackTrace returns the stack trace
-func (e *Error) StackTrace() errors.StackTrace {
-	return e.Stack
-}
-
-// With returns the error as Response Error
-func (e *Error) With(status int) *Response {
-	return &Response{
-		StatusCode: status,
-		Err:        e,
-	}
-}
-
-// Fields returns the fields that should be logged
-func (e *Error) Fields() log.Fields {
-	fields := log.Fields{}
-
-	if e.Code > 0 {
-		fields["code"] = e.Code
-	}
-
-	if e.Reason != nil {
-		var reason interface{}
-
-		switch errx := e.Reason.(type) {
-		case *Error:
-			reason = FieldsFormatter(errx.Fields()).Add("message", errx.Message)
-		case MultiError:
-			reason = FieldsFormatter(errx.Fields())
-		default:
-			reason = errx.Error()
-		}
-
-		fields["reason"] = reason
-	}
-
-	for index, msg := range e.Details {
-		key := fmt.Sprintf("details[%d]", index)
-		fields[key] = msg
-	}
-
-	return fields
-}
-
-// Wrap wraps the actual error
-func (e *Error) Wrap(err error) *Error {
-	e.Reason = err
-	e.Stack = NewStack().StackTrace()
-	return e
-}
-
-// Cause returns the real reason for the error
-func (e *Error) Cause() error {
-	if e.Reason == nil {
-		return e
-	}
-
-	if reason, ok := e.Reason.(*Error); ok {
-		return reason.Cause()
-	}
-
-	return e.Reason
-}
-
-func (e Error) prepare() *Error {
-	err := &Error{
-		Code:    e.Code,
-		Message: e.Message,
-		Details: e.Details,
-	}
-
-	if e.Reason == nil {
-		return err
-	}
-
-	switch errx := e.Reason.(type) {
-	case *Error:
-		err.Reason = errx.prepare()
-	case MultiError:
-		err.Reason = errx.prepare()
-	default:
-		err.Reason = &Error{Message: e.Reason.Error()}
-	}
-
-	return err
 }

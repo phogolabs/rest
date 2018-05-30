@@ -1,4 +1,4 @@
-package: github.com/phogolabs/rho
+package: github.com/phogolabs/http
 import:
 - package: github.com/go-chi/chi
   version: v3.3.2
