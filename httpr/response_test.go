@@ -12,10 +12,44 @@ import (
 )
 
 var _ = Describe("Response", func() {
-	var r *http.Request
+	var (
+		r *http.Request
+		w *httptest.ResponseRecorder
+	)
 
 	BeforeEach(func() {
+		w = httptest.NewRecorder()
 		r = httptest.NewRequest("GET", "http://example.com", nil)
+		r.Header.Set("Content-Type", "application/json")
+	})
+
+	Describe("Respond", func() {
+		It("respond successfully", func() {
+			response := &httpr.Response{StatusCode: http.StatusCreated}
+			httpr.Respond(w, r, response)
+			status, ok := r.Context().Value(render.StatusCtxKey).(int)
+			Expect(ok).To(BeTrue())
+			Expect(status).To(Equal(http.StatusCreated))
+		})
+
+		Context("when the data is not response", func() {
+			It("respond successfully", func() {
+				httpr.Respond(w, r, "hello")
+				status, ok := r.Context().Value(render.StatusCtxKey).(int)
+				Expect(ok).To(BeTrue())
+				Expect(status).To(Equal(http.StatusOK))
+				Expect(w.Body.String()).To(ContainSubstring("hello"))
+			})
+		})
+
+		Context("when the data is not nil", func() {
+			It("respond successfully", func() {
+				httpr.Respond(w, r, nil)
+				_, ok := r.Context().Value(render.StatusCtxKey).(int)
+				Expect(ok).To(BeFalse())
+				Expect(w.Body.Len()).To(BeZero())
+			})
+		})
 	})
 
 	It("sets the status code successfully", func() {

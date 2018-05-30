@@ -42,6 +42,23 @@ func (p *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// Respond responds with success
+func Respond(w http.ResponseWriter, r *http.Request, data interface{}) {
+	if data == nil {
+		return
+	}
+
+	response, ok := data.(*Response)
+	if !ok {
+		response = &Response{
+			StatusCode: http.StatusOK,
+			Data:       data,
+		}
+	}
+
+	_ = render.Render(w, r, response)
+}
+
 // ErrorResponse represents a HTTP error response
 type ErrorResponse struct {
 	StatusCode int   `json:"-" xml:"-"`
