@@ -47,7 +47,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'id' is required"))
@@ -62,7 +62,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'id' is not valid UUID"))
@@ -97,7 +97,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'num' is required"))
@@ -112,7 +112,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid integer number"))
@@ -144,7 +144,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamUint(r, "num", 0, 64)
 				Expect(err).NotTo(BeNil())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid unsigned integer number"))
@@ -157,7 +157,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'num' is required"))
@@ -178,7 +178,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid unsigned integer number"))
@@ -202,7 +202,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'num' is required"))
@@ -217,7 +217,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid float number"))
@@ -246,7 +246,7 @@ var _ = Describe("Query", func() {
 				value, err := httpr.URLQueryParamTime(r, "from", time.RFC3339Nano)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'from' is required"))
@@ -262,15 +262,12 @@ var _ = Describe("Query", func() {
 				Expect(err).To(HaveOccurred())
 				Expect(value.IsZero()).To(BeTrue())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Query Parameter 'from' is not valid date time"))
-
-				rrErr, ok := (rErr.Err).(*httpr.HTTPError)
-				Expect(ok).To(BeTrue())
-				Expect(rrErr.Details).To(HaveLen(1))
-				Expect(rrErr.Details[0]).To(Equal(fmt.Sprintf("Expected date time format '%s'", time.RFC3339Nano)))
+				Expect(rErr.Details).To(HaveLen(1))
+				Expect(rErr.Details[0]).To(Equal(fmt.Sprintf("Expected date time format '%s'", time.RFC3339Nano)))
 			})
 
 			It("returns the provided value", func() {

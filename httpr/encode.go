@@ -3,14 +3,14 @@ package httpr
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
-var (
-	_ render.Renderer = &Response{}
-	_ render.Renderer = &ErrorResponse{}
-)
+// DefaultValidator is the default payload validator
+var DefaultValidator = validator.New()
+
+var _ render.Renderer = &Response{}
 
 // ResponseMeta keeps meta information for the successful response
 type ResponseMeta struct {
@@ -42,13 +42,14 @@ func (p *Response) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// Respond responds with success
-func Respond(w http.ResponseWriter, r *http.Request, data interface{}) {
+// Render responds with success
+func Render(w http.ResponseWriter, r *http.Request, data interface{}) {
 	if data == nil {
 		return
 	}
 
 	response, ok := data.(*Response)
+
 	if !ok {
 		response = &Response{
 			StatusCode: http.StatusOK,
@@ -59,36 +60,13 @@ func Respond(w http.ResponseWriter, r *http.Request, data interface{}) {
 	_ = render.Render(w, r, response)
 }
 
-// ErrorResponse represents a HTTP error response
-type ErrorResponse struct {
-	StatusCode int   `json:"-" xml:"-"`
-	Err        Error `json:"error" xml:"error"`
-}
-
-// Error returns the error message
-func (e *ErrorResponse) Error() string {
-	return e.Err.Error()
-}
-
-// Render renders a single error and respond to the client request.
-func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	if e.StatusCode <= 0 {
-		e.StatusCode = http.StatusInternalServerError
+// RenderError responds with error to the client
+func RenderError(w http.ResponseWriter, r *http.Request, err error) {
+	if err == nil {
+		return
 	}
 
-	e.Err = e.Err.Prepare()
-
-	if logEntry := middleware.GetLogEntry(r); logEntry != nil {
-		logEntry.Panic(e.Err, nil)
-	}
-
-	render.Status(r, e.StatusCode)
-	return nil
-}
-
-// RespondError responds with error to the client
-func RespondError(w http.ResponseWriter, r *http.Request, err error) {
-	var response *ErrorResponse
+	var response render.Renderer
 
 	switch pkgName(err) {
 	case "github.com/lib/pq":
@@ -107,10 +85,7 @@ func RespondError(w http.ResponseWriter, r *http.Request, err error) {
 		response = UnknownError(err)
 	}
 
-	if response == nil {
-		return
+	if response != nil {
+		response.Render(w, r)
 	}
-
-	// Response never fails
-	_ = render.Render(w, r, response)
 }

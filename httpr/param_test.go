@@ -44,9 +44,8 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
-
 				Expect(rErr).To(MatchError("Parameter 'id' is required"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
@@ -59,9 +58,8 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamUUID(r, "id")
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
-
 				Expect(rErr).To(MatchError("Parameter 'id' is not valid UUID"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
@@ -94,9 +92,8 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
-
 				Expect(rErr).To(MatchError("Parameter 'num' is required"))
 				Expect(value).To(Equal(int64(0)))
 			})
@@ -109,9 +106,8 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamInt(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
-
 				Expect(rErr).To(MatchError("Parameter 'num' is not valid integer number"))
 				Expect(value).To(Equal(int64(0)))
 			})
@@ -141,7 +137,7 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamUint(r, "num", 0, 64)
 				Expect(err).NotTo(BeNil())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Parameter 'num' is not valid unsigned integer number"))
@@ -154,7 +150,7 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Parameter 'num' is required"))
@@ -175,7 +171,7 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamUint(r, "num", 0, 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Parameter 'num' is not valid unsigned integer number"))
@@ -199,7 +195,7 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Parameter 'num' is required"))
@@ -214,7 +210,7 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamFloat(r, "num", 64)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Parameter 'num' is not valid float number"))
@@ -244,7 +240,7 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamTime(r, "from", time.RFC3339Nano)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
 				Expect(rErr).To(MatchError("Parameter 'from' is required"))
@@ -259,15 +255,12 @@ var _ = Describe("Param", func() {
 				value, err := httpr.URLParamTime(r, "from", time.RFC3339Nano)
 				Expect(err).To(HaveOccurred())
 
-				rErr, ok := (err).(*httpr.ErrorResponse)
+				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				rrErr, ok := (rErr.Err).(*httpr.HTTPError)
-				Expect(ok).To(BeTrue())
-
-				Expect(rrErr.Message).To(Equal("Parameter 'from' is not valid date time"))
-				Expect(rrErr.Details).To(HaveLen(1))
-				Expect(rrErr.Details[0]).To(Equal(fmt.Sprintf("Expected date time format '%s'", time.RFC3339Nano)))
+				Expect(rErr.Message).To(Equal("Parameter 'from' is not valid date time"))
+				Expect(rErr.Details).To(HaveLen(1))
+				Expect(rErr.Details[0]).To(Equal(fmt.Sprintf("Expected date time format '%s'", time.RFC3339Nano)))
 				Expect(value.IsZero()).To(BeTrue())
 			})
 

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,17 +28,8 @@ var _ = Describe("Decode", func() {
 		Expect(json.NewEncoder(body).Encode(&t)).To(Succeed())
 
 		t2 := T{}
-		Expect(httpr.Decode(r, &t2)).To(Succeed())
+		Expect(httpr.Bind(r, &t2)).To(Succeed())
 		Expect(t2).To(Equal(t))
-	})
-
-	Context("when the decoder fails", func() {
-		It("returns the error", func() {
-			body.WriteString("wrong")
-
-			t := time.Now()
-			Expect(httpr.Decode(r, &t)).To(MatchError("Unable to unmarshal request body"))
-		})
 	})
 
 	Context("when the binder fails", func() {
@@ -48,17 +38,17 @@ var _ = Describe("Decode", func() {
 			Expect(json.NewEncoder(body).Encode(&t)).To(Succeed())
 
 			t2 := T{}
-			Expect(httpr.Decode(r, &t2)).To(MatchError("Unable to bind request"))
+			Expect(httpr.Bind(r, &t2)).To(MatchError("Oh no"))
 		})
 	})
 
 	Context("when the validation fails", func() {
 		It("returns the error", func() {
-			t := time.Now()
+			t := T{}
 			Expect(json.NewEncoder(body).Encode(&t)).To(Succeed())
 
-			var t2 time.Time
-			Expect(httpr.Decode(r, &t2)).To(MatchError("Unable to validate request"))
+			t2 := T{}
+			Expect(httpr.Bind(r, &t2)).To(MatchError("Key: 'T.Name' Error:Field validation for 'Name' failed on the 'required' tag"))
 		})
 	})
 })

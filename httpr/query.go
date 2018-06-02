@@ -162,18 +162,12 @@ func URLQueryParamTimeOrValue(r *http.Request, key, format string, value time.Ti
 
 func queryParamRequired(key string) error {
 	msg := fmt.Sprintf("Query Parameter '%s' is required", key)
-	err := &ErrorResponse{
-		StatusCode: http.StatusBadRequest,
-		Err:        NewError(CodeQueryParamRequired, msg),
-	}
-	return err
+	errx := NewError(CodeQueryParamRequired, msg)
+	return errx.WithStatus(http.StatusBadRequest)
 }
 
 func queryParamParse(key, tname string, err error, details ...string) error {
 	info := fmt.Sprintf("Query Parameter '%s' is not valid %s", key, tname)
-	errx := &ErrorResponse{
-		StatusCode: http.StatusUnprocessableEntity,
-		Err:        NewError(CodeQueryParamInvalid, info, details...).Wrap(err),
-	}
-	return errx
+	errx := NewError(CodeQueryParamInvalid, info, details...).Wrap(err)
+	return errx.WithStatus(http.StatusUnprocessableEntity)
 }

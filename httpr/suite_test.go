@@ -27,10 +27,10 @@ func TestHTTPR(t *testing.T) {
 
 type T struct {
 	Err  string `json:"err"`
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required"`
 }
 
-func (t T) Bind(r *http.Request) error {
+func (t *T) Bind(r *http.Request) error {
 	if t.Err != "" {
 		return fmt.Errorf(t.Err)
 	}

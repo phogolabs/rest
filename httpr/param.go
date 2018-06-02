@@ -157,19 +157,13 @@ func URLParamTimeOrValue(r *http.Request, key, format string, value time.Time) t
 }
 
 func paramRequired(key string) error {
-	msg := fmt.Sprintf("Parameter '%s' is required", key)
-	err := &ErrorResponse{
-		StatusCode: http.StatusBadRequest,
-		Err:        NewError(CodeParamRequired, msg),
-	}
-	return err
+	info := fmt.Sprintf("Parameter '%s' is required", key)
+	errx := NewError(CodeParamRequired, info)
+	return errx.WithStatus(http.StatusBadRequest)
 }
 
 func paramParse(key, tname string, err error, details ...string) error {
 	info := fmt.Sprintf("Parameter '%s' is not valid %s", key, tname)
-	errx := &ErrorResponse{
-		StatusCode: http.StatusUnprocessableEntity,
-		Err:        NewError(CodeParamInvalid, info, details...).Wrap(err),
-	}
-	return errx
+	errx := NewError(CodeParamInvalid, info, details...).Wrap(err)
+	return errx.WithStatus(http.StatusUnprocessableEntity)
 }
