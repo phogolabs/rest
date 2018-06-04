@@ -23,7 +23,7 @@ func URLParamUUID(r *http.Request, key string) (uuid.UUID, error) {
 		return value, nil
 	}
 
-	err = paramParse(key, "UUID", err)
+	err = paramParse(key, "uuid", err)
 	return uuid.Nil, err
 }
 

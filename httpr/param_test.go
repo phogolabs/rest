@@ -60,7 +60,7 @@ var _ = Describe("Param", func() {
 
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
-				Expect(rErr).To(MatchError("parameter 'id' is not valid UUID"))
+				Expect(rErr).To(MatchError("parameter 'id' is not valid uuid"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
 

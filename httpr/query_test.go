@@ -65,7 +65,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("query parameter 'id' is not valid UUID"))
+				Expect(rErr).To(MatchError("query parameter 'id' is not valid uuid"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
 

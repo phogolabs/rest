@@ -27,7 +27,7 @@ func URLQueryParamUUID(r *http.Request, key string) (uuid.UUID, error) {
 		return value, nil
 	}
 
-	err = queryParamParse(key, "UUID", err)
+	err = queryParamParse(key, "uuid", err)
 	return uuid.Nil, err
 }
 
