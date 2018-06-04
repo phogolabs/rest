@@ -1,5 +1,5 @@
 hash: d1f3e2734f4d0a32d8ee40de0f7180b8d074d4294fb861e66e475d0b550a733b
-updated: 2018-05-30T18:51:33.230441+03:00
+updated: 2018-06-04T11:26:44.059664+03:00
 imports:
 - name: github.com/apex/log
   version: 0296d6eb16bb28f8a0c55668affcf4876dc269be
@@ -13,7 +13,7 @@ imports:
   - middleware
   - render
 - name: github.com/go-chi/render
-  version: 8c8c7a43d054b536d7e18e82c4331e7258f211a2
+  version: 3215478343fbc559bd3fc08f7031bb134d6bdad5
 - name: github.com/go-openapi/inflect
   version: b1f6470ffb9c552dc105dd869f16e36ba86ba7d0
 - name: github.com/go-playground/locales
@@ -69,10 +69,6 @@ testImports:
   - matchers/support/goraph/node
   - matchers/support/goraph/util
   - types
-- name: github.com/phogolabs/rho
-  version: eeaa417d2827914d081128adf0f930c692210723
-  subpackages:
-  - httpware
 - name: golang.org/x/net
   version: 2491c5de3490fced2f6cff376127c667efeed857
   subpackages:

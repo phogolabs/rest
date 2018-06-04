@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/apex/log"
-	"github.com/apex/log/handlers/text"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/phogolabs/rho/httpware"
+
+	"github.com/apex/log"
+	"github.com/apex/log/handlers/text"
+	"github.com/phogolabs/http/httpware"
 )
 
 var _ = Describe("HTTPWare", func() {

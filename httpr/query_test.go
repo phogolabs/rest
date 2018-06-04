@@ -50,7 +50,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'id' is required"))
+				Expect(rErr).To(MatchError("query parameter 'id' is required"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
 		})
@@ -65,7 +65,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'id' is not valid UUID"))
+				Expect(rErr).To(MatchError("query parameter 'id' is not valid UUID"))
 				Expect(value).To(Equal(uuid.Nil))
 			})
 
@@ -100,7 +100,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'num' is required"))
+				Expect(rErr).To(MatchError("query parameter 'num' is required"))
 				Expect(value).To(Equal(int64(0)))
 			})
 		})
@@ -115,7 +115,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid integer number"))
+				Expect(rErr).To(MatchError("query parameter 'num' is not valid integer number"))
 				Expect(value).To(Equal(int64(0)))
 			})
 
@@ -147,7 +147,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid unsigned integer number"))
+				Expect(rErr).To(MatchError("query parameter 'num' is not valid unsigned integer number"))
 				Expect(value).To(Equal(uint64(0)))
 			})
 		})
@@ -160,7 +160,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'num' is required"))
+				Expect(rErr).To(MatchError("query parameter 'num' is required"))
 				Expect(value).To(Equal(uint64(0)))
 			})
 
@@ -181,7 +181,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid unsigned integer number"))
+				Expect(rErr).To(MatchError("query parameter 'num' is not valid unsigned integer number"))
 				Expect(value).To(Equal(uint64(0)))
 			})
 		})
@@ -205,7 +205,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'num' is required"))
+				Expect(rErr).To(MatchError("query parameter 'num' is required"))
 				Expect(value).To(Equal(float64(0)))
 			})
 		})
@@ -220,7 +220,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'num' is not valid float number"))
+				Expect(rErr).To(MatchError("query parameter 'num' is not valid float number"))
 				Expect(value).To(Equal(float64(0)))
 			})
 
@@ -249,7 +249,7 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'from' is required"))
+				Expect(rErr).To(MatchError("query parameter 'from' is required"))
 				Expect(value.IsZero()).To(BeTrue())
 			})
 		})
@@ -265,9 +265,9 @@ var _ = Describe("Query", func() {
 				rErr, ok := (err).(*httpr.Error)
 				Expect(ok).To(BeTrue())
 
-				Expect(rErr).To(MatchError("Query Parameter 'from' is not valid date time"))
+				Expect(rErr).To(MatchError("query parameter 'from' is not valid date time"))
 				Expect(rErr.Details).To(HaveLen(1))
-				Expect(rErr.Details[0]).To(Equal(fmt.Sprintf("Expected date time format '%s'", time.RFC3339Nano)))
+				Expect(rErr.Details[0]).To(Equal(fmt.Sprintf("expected date time format '%s'", time.RFC3339Nano)))
 			})
 
 			It("returns the provided value", func() {

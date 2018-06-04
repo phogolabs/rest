@@ -51,14 +51,26 @@ const (
 	CodeBackendNotReady = iota + code
 )
 
+// ErrorRenderer renders error as HTTP response
+type ErrorRenderer interface {
+	render.Renderer
+	error
+}
+
+// LoggableError logs an error by providing extra information
+type LoggableError interface {
+	Fields() log.Fields
+	error
+}
+
 var (
-	_ render.Renderer = &Error{}
-	_ error           = &Error{}
-	_ error           = &ErrorList{}
+	_ ErrorRenderer = &Error{}
+	_ LoggableError = &Error{}
+	_ LoggableError = &ErrorList{}
 )
 
 // ErrorList represents a slice of errors
-type ErrorList []*Error
+type ErrorList []error
 
 // Error returns the error message
 func (e ErrorList) Error() string {
@@ -80,14 +92,6 @@ func (e ErrorList) Fields() log.Fields {
 	}
 
 	return fields
-}
-
-func (e ErrorList) prepare() ErrorList {
-	merr := ErrorList{}
-	for _, err := range e {
-		merr = append(merr, err.prepare())
-	}
-	return merr
 }
 
 // Error is a more feature rich implementation of error interface inspired
@@ -131,6 +135,10 @@ func (e *Error) StackTrace() errors.StackTrace {
 func (e *Error) Fields() log.Fields {
 	fields := log.Fields{}
 
+	if e.Status > 0 {
+		fields["status"] = e.Status
+	}
+
 	if e.Code > 0 {
 		fields["code"] = e.Code
 	}
@@ -173,25 +181,6 @@ func (e *Error) WithStatus(status int) *Error {
 	return e
 }
 
-// Prepare prepares the error for rendering
-func (e Error) prepare() *Error {
-
-	if e.Reason == nil {
-		return &e
-	}
-
-	switch errx := e.Reason.(type) {
-	case *Error:
-		e.Reason = errx.prepare()
-	case ErrorList:
-		e.Reason = errx.prepare()
-	default:
-		e.Reason = &Error{Message: e.Reason.Error()}
-	}
-
-	return &e
-}
-
 // Render renders a single error and respond to the client request.
 func (e *Error) Render(w http.ResponseWriter, r *http.Request) error {
 	if logEntry := middleware.GetLogEntry(r); logEntry != nil {
@@ -199,7 +188,7 @@ func (e *Error) Render(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	response := render.M{
-		"error": e.prepare(),
+		"error": prepare(e),
 	}
 
 	render.Status(r, e.Status)
@@ -223,17 +212,6 @@ func (f FieldsFormatter) String() string {
 	}
 
 	return fmt.Sprintf("[%s]", buffer.String())
-}
-
-func reason(err error) interface{} {
-	switch errx := err.(type) {
-	case *Error:
-		return FieldsFormatter(errx.Fields()).Add("message", errx.Message)
-	case ErrorList:
-		return FieldsFormatter(errx.Fields())
-	default:
-		return errx.Error()
-	}
 }
 
 // Add adds key to the formatter
@@ -397,7 +375,7 @@ func PGDataError(err pq.Error) *Error {
 
 // ValidationError is an error which occurrs duering validation
 func ValidationError(err error) *Error {
-	rerrx := NewError(CodeConditionNotMet, "Validation failed")
+	rerrx := NewError(CodeConditionNotMet, "validation failed")
 	rerrx = rerrx.WithStatus(http.StatusUnprocessableEntity)
 
 	errors, ok := err.(validator.ValidationErrors)
@@ -409,9 +387,41 @@ func ValidationError(err error) *Error {
 
 	for _, ferr := range errors {
 		if err, ok := ferr.(error); ok {
-			errs = append(errs, &Error{Message: err.Error()})
+			errs = append(errs, err)
 		}
 	}
 
 	return rerrx.Wrap(errs)
+}
+
+func reason(err error) interface{} {
+	switch errx := err.(type) {
+	case *Error:
+		return FieldsFormatter(errx.Fields()).Add("message", errx.Message)
+	case ErrorList:
+		return FieldsFormatter(errx.Fields())
+	default:
+		return errx.Error()
+	}
+}
+
+func prepare(err error) error {
+	if err == nil {
+		return err
+	}
+
+	switch errx := err.(type) {
+	case *Error:
+		result := *errx
+		result.Reason = prepare(result.Reason)
+		return &result
+	case ErrorList:
+		result := ErrorList{}
+		for _, item := range errx {
+			result = append(result, prepare(item))
+		}
+		return result
+	default:
+		return &Error{Message: err.Error()}
+	}
 }

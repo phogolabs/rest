@@ -140,7 +140,7 @@ func URLParamTime(r *http.Request, key, format string) (time.Time, error) {
 		return value, nil
 	}
 
-	info := fmt.Sprintf("Expected date time format '%s'", format)
+	info := fmt.Sprintf("expected date time format '%s'", format)
 	err = paramParse(key, "date time", err, info)
 	return time.Time{}, err
 }
@@ -157,13 +157,13 @@ func URLParamTimeOrValue(r *http.Request, key, format string, value time.Time) t
 }
 
 func paramRequired(key string) error {
-	info := fmt.Sprintf("Parameter '%s' is required", key)
+	info := fmt.Sprintf("parameter '%s' is required", key)
 	errx := NewError(CodeParamRequired, info)
 	return errx.WithStatus(http.StatusBadRequest)
 }
 
 func paramParse(key, tname string, err error, details ...string) error {
-	info := fmt.Sprintf("Parameter '%s' is not valid %s", key, tname)
+	info := fmt.Sprintf("parameter '%s' is not valid %s", key, tname)
 	errx := NewError(CodeParamInvalid, info, details...).Wrap(err)
 	return errx.WithStatus(http.StatusUnprocessableEntity)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/phogolabs/http/httpr"
 )
 
-var _ = Describe("Decode", func() {
+var _ = Describe("Binder", func() {
 	var (
 		r    *http.Request
 		body *bytes.Buffer
@@ -48,7 +48,7 @@ var _ = Describe("Decode", func() {
 			Expect(json.NewEncoder(body).Encode(&t)).To(Succeed())
 
 			t2 := T{}
-			Expect(httpr.Bind(r, &t2)).To(MatchError("Key: 'T.Name' Error:Field validation for 'Name' failed on the 'required' tag"))
+			Expect(httpr.Bind(r, &t2)).To(MatchError("Key: 'T.name' Error:Field validation for 'name' failed on the 'required' tag"))
 		})
 	})
 })

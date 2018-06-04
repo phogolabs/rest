@@ -2,11 +2,7 @@ package httpr_test
 
 import (
 	"fmt"
-	"log"
-	"net/http"
-	"net/http/httptest"
 
-	"github.com/go-chi/chi/middleware"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/phogolabs/http/httpr"
@@ -122,72 +118,5 @@ var _ = Describe("FieldsFormatter", func() {
 		f := httpr.FieldsFormatter{"id": 1, "name": "root"}
 		f.Add("pass", "swordfish")
 		Expect(f).To(HaveKeyWithValue("pass", "swordfish"))
-	})
-})
-
-var _ = Describe("RenderError", func() {
-	var (
-		r *http.Request
-		w *httptest.ResponseRecorder
-	)
-
-	BeforeEach(func() {
-		formatter := &middleware.DefaultLogFormatter{
-			Logger: log.New(GinkgoWriter, "", log.LstdFlags),
-		}
-
-		w = httptest.NewRecorder()
-		r = httptest.NewRequest("GET", "http://example.com", nil)
-		r = middleware.WithLogEntry(r, formatter.NewLogEntry(r))
-	})
-
-	Context("when the error is http error", func() {
-		It("handles the error", func() {
-			err := httpr.NewError(1, "Oh no!")
-			httpr.RenderError(w, r, err)
-
-			Expect(w.Code).To(Equal(http.StatusInternalServerError))
-			payload := unmarshalErrResponse(w.Body)
-
-			Expect(payload).To(HaveKeyWithValue("code", float64(1)))
-			Expect(payload).To(HaveKeyWithValue("message", "Oh no!"))
-		})
-
-		Context("when the error is nested", func() {
-			It("handles the error", func() {
-				err := httpr.NewError(1, "Oh no!")
-				err.Wrap(httpr.NewError(1, "Oh no!"))
-				httpr.RenderError(w, r, err)
-
-				Expect(w.Code).To(Equal(http.StatusInternalServerError))
-				payload := unmarshalErrResponse(w.Body)
-
-				Expect(payload).To(HaveKeyWithValue("code", float64(1)))
-				Expect(payload).To(HaveKeyWithValue("message", "Oh no!"))
-			})
-		})
-	})
-
-	Context("when the error is nil", func() {
-		It("handles the error", func() {
-			httpr.RenderError(w, r, nil)
-
-			Expect(w.Code).To(Equal(http.StatusOK))
-			Expect(w.Body.Len()).To(BeZero())
-		})
-	})
-
-	Context("when the error is regular error", func() {
-		It("handles the error", func() {
-			err := fmt.Errorf("Oh no!")
-			httpr.RenderError(w, r, err)
-
-			Expect(w.Code).To(Equal(http.StatusInternalServerError))
-			payload := unmarshalErrResponse(w.Body)
-
-			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Internal Error"))
-			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
-		})
 	})
 })
