@@ -80,7 +80,7 @@ var _ = Describe("RenderError", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Internal Error"))
+			Expect(payload).To(HaveKeyWithValue("message", "internal error"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -106,7 +106,7 @@ var _ = Describe("Conv Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInvalid)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to parse date time"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to parse date time"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -120,7 +120,7 @@ var _ = Describe("Conv Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInvalid)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to parse number"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to parse number"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -142,7 +142,7 @@ var _ = Describe("JSON Error", func() {
 			errx := httpr.JSONError(fmt.Errorf("Oh no!"))
 			Expect(errx.Status).To(Equal(http.StatusInternalServerError))
 			Expect(errx.Code).To(Equal(httpr.CodeInternal))
-			Expect(errx.Message).To(Equal("JSON Error"))
+			Expect(errx.Message).To(Equal("json error"))
 		})
 	})
 
@@ -155,7 +155,7 @@ var _ = Describe("JSON Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to unmarshal json body"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to unmarshal json body"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -170,7 +170,7 @@ var _ = Describe("JSON Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInvalid)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to unmarshal json body"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to unmarshal json body"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -184,7 +184,7 @@ var _ = Describe("JSON Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInvalid)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to unmarshal json body"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to unmarshal json body"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -198,7 +198,7 @@ var _ = Describe("JSON Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to marshal json"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to marshal json"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -212,7 +212,7 @@ var _ = Describe("JSON Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to marshal json"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to marshal json"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -226,7 +226,7 @@ var _ = Describe("JSON Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to marshal json"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to marshal json"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -240,7 +240,7 @@ var _ = Describe("JSON Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to marshal json"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to marshal json"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -262,7 +262,7 @@ var _ = Describe("XML Error", func() {
 			errx := httpr.XMLError(fmt.Errorf("Oh no!"))
 			Expect(errx.Status).To(Equal(http.StatusInternalServerError))
 			Expect(errx.Code).To(Equal(httpr.CodeInternal))
-			Expect(errx.Message).To(Equal("XML Error"))
+			Expect(errx.Message).To(Equal("xml error"))
 		})
 	})
 
@@ -275,7 +275,7 @@ var _ = Describe("XML Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInvalid)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to unmarshal xml body"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to unmarshal xml body"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -289,7 +289,7 @@ var _ = Describe("XML Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInvalid)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to unmarshal xml body"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to unmarshal xml body"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -303,7 +303,7 @@ var _ = Describe("XML Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInvalid)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to unmarshal xml body"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to unmarshal xml body"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -317,7 +317,7 @@ var _ = Describe("XML Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeInternal)))
-			Expect(payload).To(HaveKeyWithValue("message", "Unable to marshal xml"))
+			Expect(payload).To(HaveKeyWithValue("message", "unable to marshal xml"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -356,7 +356,7 @@ var _ = Describe("Validation Error", func() {
 			err := &validator.InvalidValidationError{Type: reflect.TypeOf(*r)}
 			resp := httpr.ValidationError(err)
 			Expect(resp.Status).To(Equal(http.StatusUnprocessableEntity))
-			Expect(resp).To(MatchError("validation failed"))
+			Expect(resp).To(MatchError("validation error"))
 		})
 	})
 })
@@ -381,7 +381,7 @@ var _ = Describe("PostgreSQL Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeBackendNotConnected)))
-			Expect(payload).To(HaveKeyWithValue("message", "Connection Error"))
+			Expect(payload).To(HaveKeyWithValue("message", "connection error"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -395,7 +395,7 @@ var _ = Describe("PostgreSQL Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeConflict)))
-			Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+			Expect(payload).To(HaveKeyWithValue("message", "data error"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 
@@ -408,7 +408,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeOutOfrange)))
-				Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+				Expect(payload).To(HaveKeyWithValue("message", "data error"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -422,7 +422,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeOutOfrange)))
-				Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+				Expect(payload).To(HaveKeyWithValue("message", "data error"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -436,7 +436,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeOutOfrange)))
-				Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+				Expect(payload).To(HaveKeyWithValue("message", "data error"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -450,7 +450,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeOutOfrange)))
-				Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+				Expect(payload).To(HaveKeyWithValue("message", "data error"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -464,7 +464,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeOutOfrange)))
-				Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+				Expect(payload).To(HaveKeyWithValue("message", "data error"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -478,7 +478,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeConditionNotMet)))
-				Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+				Expect(payload).To(HaveKeyWithValue("message", "data error"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -492,7 +492,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeConditionNotMet)))
-				Expect(payload).To(HaveKeyWithValue("message", "Data Error"))
+				Expect(payload).To(HaveKeyWithValue("message", "data error"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -511,7 +511,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeDuplicate)))
-				Expect(payload).To(HaveKeyWithValue("message", "Integrity Constraint Violation"))
+				Expect(payload).To(HaveKeyWithValue("message", "integrity constraint violation"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -525,7 +525,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeConditionNotMet)))
-				Expect(payload).To(HaveKeyWithValue("message", "Integrity Constraint Violation"))
+				Expect(payload).To(HaveKeyWithValue("message", "integrity constraint violation"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -539,7 +539,7 @@ var _ = Describe("PostgreSQL Error", func() {
 				payload := unmarshalErrResponse(w.Body)
 
 				Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeConditionNotMet)))
-				Expect(payload).To(HaveKeyWithValue("message", "Integrity Constraint Violation"))
+				Expect(payload).To(HaveKeyWithValue("message", "integrity constraint violation"))
 				Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 			})
 		})
@@ -554,7 +554,7 @@ var _ = Describe("PostgreSQL Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeBackendNotReady)))
-			Expect(payload).To(HaveKeyWithValue("message", "Operator Intervention"))
+			Expect(payload).To(HaveKeyWithValue("message", "operator intervention"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})
@@ -568,7 +568,7 @@ var _ = Describe("PostgreSQL Error", func() {
 			payload := unmarshalErrResponse(w.Body)
 
 			Expect(payload).To(HaveKeyWithValue("code", float64(httpr.CodeBackend)))
-			Expect(payload).To(HaveKeyWithValue("message", "Database Error"))
+			Expect(payload).To(HaveKeyWithValue("message", "database error"))
 			Expect(payload["reason"]).To(HaveKeyWithValue("message", err.Error()))
 		})
 	})

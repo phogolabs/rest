@@ -223,22 +223,22 @@ func (f FieldsFormatter) Add(key string, value interface{}) FieldsFormatter {
 
 // ConvError creates a Response for given strconv error
 func ConvError(err error) *Error {
-	errx := NewError(CodeInvalid, "Unable to parse number")
+	errx := NewError(CodeInvalid, "unable to parse number")
 	return errx.WithStatus(http.StatusUnprocessableEntity).Wrap(err)
 }
 
 // TimeError creates a Response for given time error
 func TimeError(err error) *Error {
-	errx := NewError(CodeInvalid, "Unable to parse date time")
+	errx := NewError(CodeInvalid, "unable to parse date time")
 	return errx.WithStatus(http.StatusUnprocessableEntity).Wrap(err)
 }
 
 // JSONError creates a Response for given json error
 func JSONError(err error) *Error {
 	const (
-		jsonMsg          = "JSON Error"
-		jsonUnmarshalMsg = "Unable to unmarshal json body"
-		jsonMarshalMsg   = "Unable to marshal json"
+		jsonMsg          = "json error"
+		jsonUnmarshalMsg = "unable to unmarshal json body"
+		jsonMarshalMsg   = "unable to marshal json"
 	)
 
 	switch err.(type) {
@@ -260,9 +260,9 @@ func JSONError(err error) *Error {
 // XMLError creates a Response for given xml error
 func XMLError(err error) *Error {
 	const (
-		xmlMsg          = "XML Error"
-		xmlUnmarshalMsg = "Unable to unmarshal xml body"
-		xmlMarshalMsg   = "Unable to marshal xml"
+		xmlMsg          = "xml error"
+		xmlUnmarshalMsg = "unable to unmarshal xml body"
+		xmlMarshalMsg   = "unable to marshal xml"
 	)
 
 	switch err.(type) {
@@ -284,7 +284,7 @@ func UnknownError(err error) *Error {
 	case *Error:
 		return errx
 	default:
-		unerr := NewError(CodeInternal, "Internal Error")
+		unerr := NewError(CodeInternal, "internal error")
 		return unerr.WithStatus(http.StatusInternalServerError).Wrap(err)
 	}
 }
@@ -309,7 +309,7 @@ func PGError(err error) *Error {
 
 	switch pgErr.Code[:2] {
 	case pgConnClassErr:
-		response = NewError(CodeBackendNotConnected, "Connection Error")
+		response = NewError(CodeBackendNotConnected, "connection error")
 		response = response.WithStatus(http.StatusInternalServerError)
 		response = response.Wrap(err)
 	case pgDataClassErr:
@@ -317,11 +317,11 @@ func PGError(err error) *Error {
 	case pgContraintClassErr:
 		response = PGIntegrityError(pgErr)
 	case pgOpIntClassErr:
-		response = NewError(CodeBackendNotReady, "Operator Intervention")
+		response = NewError(CodeBackendNotReady, "operator intervention")
 		response = response.WithStatus(http.StatusInternalServerError)
 		response = response.Wrap(err)
 	default:
-		response = NewError(CodeBackend, "Database Error")
+		response = NewError(CodeBackend, "database error")
 		response = response.WithStatus(http.StatusInternalServerError)
 		response = response.Wrap(err)
 	}
@@ -331,7 +331,7 @@ func PGError(err error) *Error {
 
 // PGIntegrityError handles PG integrity errors
 func PGIntegrityError(err pq.Error) *Error {
-	errx := NewError(CodeConflict, "Integrity Constraint Violation")
+	errx := NewError(CodeConflict, "integrity constraint violation")
 
 	switch err.Code {
 	// "23505": "unique_violation",
@@ -351,7 +351,7 @@ func PGIntegrityError(err pq.Error) *Error {
 
 // PGDataError handles PG integrity errors
 func PGDataError(err pq.Error) *Error {
-	errx := NewError(CodeConflict, "Data Error")
+	errx := NewError(CodeConflict, "data error")
 
 	switch err.Code {
 	// "22003": "numeric_value_out_of_range",
@@ -375,7 +375,7 @@ func PGDataError(err pq.Error) *Error {
 
 // ValidationError is an error which occurrs duering validation
 func ValidationError(err error) *Error {
-	rerrx := NewError(CodeConditionNotMet, "validation failed")
+	rerrx := NewError(CodeConditionNotMet, "validation error")
 	rerrx = rerrx.WithStatus(http.StatusUnprocessableEntity)
 
 	errors, ok := err.(validator.ValidationErrors)
