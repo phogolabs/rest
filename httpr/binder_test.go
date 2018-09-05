@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"github.com/go-playground/form"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/phogolabs/http/httpr"
@@ -30,6 +31,26 @@ var _ = Describe("Binder", func() {
 		t2 := T{}
 		Expect(httpr.Bind(r, &t2)).To(Succeed())
 		Expect(t2).To(Equal(t))
+	})
+
+	Context("when a form post is made", func() {
+		BeforeEach(func() {
+			r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			r.Method = "POST"
+		})
+
+		It("descodes the request successfully", func() {
+			t := T{Name: "Jack"}
+
+			values, err := form.NewEncoder().Encode(&t)
+			Expect(err).To(Succeed())
+
+			body.WriteString(values.Encode())
+
+			t2 := T{}
+			Expect(httpr.Bind(r, &t2)).To(Succeed())
+			Expect(t2).To(Equal(t))
+		})
 	})
 
 	Context("when the binder fails", func() {

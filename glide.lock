@@ -1,5 +1,5 @@
 hash: d1f3e2734f4d0a32d8ee40de0f7180b8d074d4294fb861e66e475d0b550a733b
-updated: 2018-06-04T11:26:44.059664+03:00
+updated: 2018-09-05T15:01:04.766845-04:00
 imports:
 - name: github.com/apex/log
   version: 0296d6eb16bb28f8a0c55668affcf4876dc269be
@@ -16,6 +16,8 @@ imports:
   version: 3215478343fbc559bd3fc08f7031bb134d6bdad5
 - name: github.com/go-openapi/inflect
   version: b1f6470ffb9c552dc105dd869f16e36ba86ba7d0
+- name: github.com/go-playground/form
+  version: 572fa772c66ec5e3606a1a548406e10fb62de317
 - name: github.com/go-playground/locales
   version: f63010822830b6fe52288ee52d5a1151088ce039
   subpackages:
@@ -25,7 +27,7 @@ imports:
 - name: github.com/goware/errorx
   version: 47153acf02d91c27f5cb227c550f5567dad93dc9
 - name: github.com/lib/pq
-  version: d34b9ff171c21ad295489235aec8b6626023cd04
+  version: 4ded0e9383f75c197b3a2aaa6d590ac52df6fd79
   subpackages:
   - oid
 - name: github.com/pkg/errors
@@ -33,7 +35,7 @@ imports:
 - name: github.com/satori/go.uuid
   version: f58768cc1a7a7e77a3bd49e98cdd21419399b6a3
 - name: gopkg.in/go-playground/validator.v9
-  version: f28cb45dc0f0f406ba2015cdb59a5203ad220bc2
+  version: e69e9a28bb62b977fdc58d051f1bb477b7cbe486
 testImports:
 - name: github.com/onsi/ginkgo
   version: 9eda700730cba42af70d53180f9dcce9266bc2bc
@@ -70,17 +72,17 @@ testImports:
   - matchers/support/goraph/util
   - types
 - name: golang.org/x/net
-  version: 2491c5de3490fced2f6cff376127c667efeed857
+  version: 8a410e7b638dca158bf9e766925842f6651ff828
   subpackages:
   - html
   - html/atom
   - html/charset
 - name: golang.org/x/sys
-  version: 7c87d13f8e835d2fb3a70a2912c811ed0c1d241b
+  version: ebe1bf3edb3325c393447059974de898d5133eb8
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 5c1cf69b5978e5a34c5f9ba09a83e56acc4b7877
+  version: 6e3c4e7365ddcc329f090f96e4348398f6310088
   subpackages:
   - encoding
   - encoding/charmap
