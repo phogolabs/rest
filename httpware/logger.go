@@ -89,15 +89,32 @@ type LogEntry struct {
 
 // NewLogEntry creates a new log entry
 func NewLogEntry(r *http.Request) *LogEntry {
-	logger := log.WithFields(log.Fields{
+	fields := log.Fields{
 		"url":        r.RequestURI,
 		"proto":      r.Proto,
 		"method":     r.Method,
 		"remoteAddr": r.RemoteAddr,
-	})
+	}
 
-	logger.Info("request")
+	if GetLevel() == log.DebugLevel {
+		fields["header"] = r.Header
+	}
+
+	logger := log.WithFields(fields)
 	return &LogEntry{logger: logger}
+}
+
+// GetLevel returns the debug level
+func GetLevel() log.Level {
+	if logger, ok := log.Log.(*log.Logger); ok {
+		return logger.Level
+	}
+
+	if entry, ok := log.Log.(*log.Entry); ok {
+		return entry.Level
+	}
+
+	return log.InvalidLevel
 }
 
 // Write logs responses
