@@ -96,25 +96,8 @@ func NewLogEntry(r *http.Request) *LogEntry {
 		"remoteAddr": r.RemoteAddr,
 	}
 
-	if GetLevel() == log.DebugLevel {
-		fields["header"] = r.Header
-	}
-
 	logger := log.WithFields(fields)
 	return &LogEntry{logger: logger}
-}
-
-// GetLevel returns the debug level
-func GetLevel() log.Level {
-	if logger, ok := log.Log.(*log.Logger); ok {
-		return logger.Level
-	}
-
-	if entry, ok := log.Log.(*log.Entry); ok {
-		return entry.Level
-	}
-
-	return log.InvalidLevel
 }
 
 // Write logs responses
