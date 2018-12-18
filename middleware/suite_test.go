@@ -1,4 +1,4 @@
-package httpware_test
+package middleware_test
 
 import (
 	"testing"
@@ -9,5 +9,5 @@ import (
 
 func TestHttpware(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "HTTPWare Suite")
+	RunSpecs(t, "Middleware Suite")
 }
