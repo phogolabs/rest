@@ -6,7 +6,7 @@
 [![Coverage][codecov-img]][codecov-url]
 [![Go Report Card][report-img]][report-url]
 
-*Golang Database Manager*
+*Built Restful Services"
 
 [![rest][rest-img]][rest-url]
 

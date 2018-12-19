@@ -1,6 +1,7 @@
 package rest_test
 
 import (
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -20,7 +21,9 @@ type Contact struct {
 	Phone string `form:"phone" validate:"phone" json:"phone"`
 }
 
-func TestRest(t *testing.T) {
+func TestREST(t *testing.T) {
+	log.SetOutput(GinkgoWriter)
+
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Rest Suite")
 }

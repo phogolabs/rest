@@ -28,7 +28,7 @@ var _ = Describe("StatusErr", func() {
 
 	Context("when the err is a validation error", func() {
 		It("sets status Unproccessable Entity: 422", func() {
-			rest.StatusErr(r, validator.ValidationErrors{})
+			rest.ErrorStatus(r, validator.ValidationErrors{})
 
 			code, ok := r.Context().Value(render.StatusCtxKey).(int)
 			Expect(ok).To(BeTrue())
@@ -38,7 +38,7 @@ var _ = Describe("StatusErr", func() {
 
 	Context("when the err is a form decoder error", func() {
 		It("sets status Bad Request: 400", func() {
-			rest.StatusErr(r, form.DecodeErrors{})
+			rest.ErrorStatus(r, form.DecodeErrors{})
 
 			code, ok := r.Context().Value(render.StatusCtxKey).(int)
 			Expect(ok).To(BeTrue())
@@ -48,7 +48,7 @@ var _ = Describe("StatusErr", func() {
 
 	Context("when the err is a json field error", func() {
 		It("sets status Bad Request: 400", func() {
-			rest.StatusErr(r, &json.UnmarshalFieldError{})
+			rest.ErrorStatus(r, &json.UnmarshalFieldError{})
 
 			code, ok := r.Context().Value(render.StatusCtxKey).(int)
 			Expect(ok).To(BeTrue())
@@ -58,7 +58,7 @@ var _ = Describe("StatusErr", func() {
 
 	Context("when the err is a json type error", func() {
 		It("sets status Bad Request: 400", func() {
-			rest.StatusErr(r, &json.UnmarshalTypeError{})
+			rest.ErrorStatus(r, &json.UnmarshalTypeError{})
 
 			code, ok := r.Context().Value(render.StatusCtxKey).(int)
 			Expect(ok).To(BeTrue())
@@ -68,7 +68,7 @@ var _ = Describe("StatusErr", func() {
 
 	Context("when the err is a sql no rows error", func() {
 		It("sets status Not Found: 404", func() {
-			rest.StatusErr(r, sql.ErrNoRows)
+			rest.ErrorStatus(r, sql.ErrNoRows)
 
 			code, ok := r.Context().Value(render.StatusCtxKey).(int)
 			Expect(ok).To(BeTrue())
@@ -78,7 +78,7 @@ var _ = Describe("StatusErr", func() {
 
 	Context("when the err is unknown", func() {
 		It("sets status Internal Server Errror: 500", func() {
-			rest.StatusErr(r, fmt.Errorf("oh no!"))
+			rest.ErrorStatus(r, fmt.Errorf("oh no!"))
 
 			code, ok := r.Context().Value(render.StatusCtxKey).(int)
 			Expect(ok).To(BeTrue())
@@ -100,7 +100,7 @@ var _ = Describe("Respond", func() {
 
 	Context("when the error is unknown", func() {
 		It("responds with error", func() {
-			rest.Respond(recorder, request, fmt.Errorf("oh no!"))
+			rest.Error(recorder, request, fmt.Errorf("oh no!"))
 
 			Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 
@@ -121,7 +121,7 @@ var _ = Describe("Respond", func() {
 			errs = multierror.Append(errs, fmt.Errorf("oh no!"))
 			errs = multierror.Append(errs, fmt.Errorf("oh yes!"))
 
-			rest.Respond(recorder, request, errs)
+			rest.Error(recorder, request, errs)
 
 			Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 
@@ -143,7 +143,7 @@ var _ = Describe("Respond", func() {
 			verr := validator.New().Struct(&entity)
 			Expect(verr).NotTo(BeNil())
 
-			rest.Respond(recorder, request, verr)
+			rest.Error(recorder, request, verr)
 
 			Expect(recorder.Code).To(Equal(http.StatusInternalServerError))
 

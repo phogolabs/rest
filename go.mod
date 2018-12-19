@@ -9,8 +9,10 @@ require (
 	github.com/go-playground/form v3.1.3+incompatible
 	github.com/go-playground/locales v0.12.1 // indirect
 	github.com/go-playground/universal-translator v0.16.0 // indirect
+	github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57 // indirect
 	github.com/goware/errorx v0.0.0-20150526135951-6c5540545f5f
 	github.com/hashicorp/go-multierror v1.0.0
+	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/leodido/go-urn v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect

@@ -11,8 +11,6 @@ import (
 )
 
 var (
-	validationFuncMap = make(map[string]validator.Func)
-
 	// Decode is a package-level variable set to our default Decoder. We do this
 	// because it allows you to set render.Decode to another function with the
 	// same function signature, while also utilizing the render.Decoder() function
