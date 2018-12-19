@@ -15,22 +15,31 @@ import (
 )
 
 var (
-	// DefaultLogFormatter is the default log formatter
-	DefaultLogFormatter = LogFormatterFunc(NewLogEntry)
-	// DefaultRequestLogger is the default logger
-	DefaultRequestLogger = middleware.RequestLogger(DefaultLogFormatter)
-)
-
-var (
-	_ middleware.LogFormatter = LogFormatterFunc(NewLogEntry)
-	_ middleware.LogEntry     = &LogEntry{}
+	_ middleware.LogEntry = &LogEntry{}
 )
 
 // Logger is a middleware that logs the start and end of each request, along
 // with some useful data about what was requested, what the response status was,
 // and how long it took to return.
 func Logger(next http.Handler) http.Handler {
-	return DefaultRequestLogger(next)
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		entry := NewLogEntry(r)
+		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+
+		before := time.Now()
+
+		defer func() {
+			entry.Write(writer.Status(), writer.BytesWritten(), time.Since(before))
+
+			if err, ok := r.Context().Value(ErrorCtxKey).(error); ok {
+				entry.logger.WithError(err).Error("occurred")
+			}
+		}()
+
+		next.ServeHTTP(writer, middleware.WithLogEntry(r, entry))
+	}
+
+	return http.HandlerFunc(fn)
 }
 
 // LoggerConfig configures the logger
@@ -71,14 +80,6 @@ func SetLogger(cfg *LoggerConfig) error {
 	log.Log = log.Log.WithFields(cfg.Fields)
 
 	return nil
-}
-
-// LogFormatterFunc is a function which implements middleware.LogFormatter
-type LogFormatterFunc func(r *http.Request) *LogEntry
-
-// NewLogEntry creates a new log entry
-func (f LogFormatterFunc) NewLogEntry(r *http.Request) middleware.LogEntry {
-	return f(r)
 }
 
 // LogEntry records the final log when a request completes.
