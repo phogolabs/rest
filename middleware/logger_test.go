@@ -1,4 +1,4 @@
-package httpware_test
+package middleware_test
 
 import (
 	"bytes"
@@ -11,10 +11,10 @@ import (
 
 	"github.com/apex/log"
 	"github.com/apex/log/handlers/text"
-	"github.com/phogolabs/http/httpware"
+	"github.com/phogolabs/rest/middleware"
 )
 
-var _ = Describe("HTTPWare", func() {
+var _ = Describe("Logger", func() {
 	var (
 		r      *http.Request
 		w      *httptest.ResponseRecorder
@@ -39,7 +39,7 @@ var _ = Describe("HTTPWare", func() {
 			w.Write([]byte("hello"))
 		})
 
-		h = httpware.Logger(h)
+		h = middleware.Logger(h)
 	})
 
 	It("logs the request on info level", func() {
@@ -77,7 +77,7 @@ var _ = Describe("HTTPWare", func() {
 
 	Context("when the panic is logged", func() {
 		It("logs the request on error level", func() {
-			entry := httpware.NewLogEntry(r)
+			entry := middleware.NewLogEntry(r)
 			entry.Panic(fmt.Errorf("Oh no!"), nil)
 			Expect(buffer.String()).To(ContainSubstring("Oh no!"))
 			Expect(buffer.String()).To(ContainSubstring("ERROR"))
@@ -85,7 +85,7 @@ var _ = Describe("HTTPWare", func() {
 
 		Context("when the panic is not an error", func() {
 			It("logs the request on error level", func() {
-				entry := httpware.NewLogEntry(r)
+				entry := middleware.NewLogEntry(r)
 				entry.Panic(-1, []byte("lol"))
 				Expect(buffer.String()).To(ContainSubstring("-1"))
 				Expect(buffer.String()).To(ContainSubstring("lol"))
@@ -110,7 +110,7 @@ var _ = Describe("SetLogger", func() {
 			It("configures the logger successfully", func() {
 				buffer := &bytes.Buffer{}
 
-				cfg := &httpware.LoggerConfig{
+				cfg := &middleware.LoggerConfig{
 					Fields: log.Fields{
 						"app_name":    "test",
 						"app_version": "beta",
@@ -120,7 +120,7 @@ var _ = Describe("SetLogger", func() {
 					Output: buffer,
 				}
 
-				Expect(httpware.SetLogger(cfg)).To(Succeed())
+				Expect(middleware.SetLogger(cfg)).To(Succeed())
 
 				log.Info("hello")
 
@@ -138,12 +138,12 @@ var _ = Describe("SetLogger", func() {
 		It("returns an error", func() {
 			buffer := &bytes.Buffer{}
 
-			cfg := &httpware.LoggerConfig{
+			cfg := &middleware.LoggerConfig{
 				Format: "wrong",
 				Output: buffer,
 			}
 
-			Expect(httpware.SetLogger(cfg)).To(MatchError("unsupported log format 'wrong'"))
+			Expect(middleware.SetLogger(cfg)).To(MatchError("unsupported log format 'wrong'"))
 		})
 	})
 
@@ -151,7 +151,7 @@ var _ = Describe("SetLogger", func() {
 		It("returns an error", func() {
 			buffer := &bytes.Buffer{}
 
-			cfg := &httpware.LoggerConfig{
+			cfg := &middleware.LoggerConfig{
 				Fields: log.Fields{
 					"app_name":    "test",
 					"app_version": "beta",
@@ -161,7 +161,7 @@ var _ = Describe("SetLogger", func() {
 				Output: buffer,
 			}
 
-			Expect(httpware.SetLogger(cfg)).To(MatchError("invalid level"))
+			Expect(middleware.SetLogger(cfg)).To(MatchError("invalid level"))
 		})
 	})
 })
