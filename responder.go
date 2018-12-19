@@ -57,36 +57,54 @@ func StatusErr(r *http.Request, err error) {
 	render.Status(r, code)
 }
 
+// WrapError creates a new error
+func WrapError(err error) *errorx.Errorx {
+	errx := errorx.New(0, "")
+
+	if errs, ok := err.(*multierror.Error); ok {
+		for _, err := range errs.Errors {
+			errx.Details = append(errx.Details, err.Error())
+		}
+	} else if verrs, ok := err.(validator.ValidationErrors); ok {
+		for _, verr := range verrs {
+			if ferr, ok := verr.(error); ok {
+				errx.Details = append(errx.Details, ferr.Error())
+			}
+		}
+	} else {
+		errx.Details = append(errx.Details, err.Error())
+	}
+	return errx
+}
+
 // DefaultResponder handles streaming JSON and XML responses, automatically setting the
 // Content-Type based on request headers. It will default to a JSON response.
 func DefaultResponder(w http.ResponseWriter, r *http.Request, v interface{}) {
 	if err, ok := v.(error); ok {
+		errx, ok := err.(*errorx.Errorx)
+
+		if !ok {
+			errx = WrapError(err)
+		}
+
+		if errx.Code == 0 {
+			code, ok := r.Context().Value(render.StatusCtxKey).(int)
+
+			if !ok {
+				code = http.StatusInternalServerError
+			}
+
+			errx.Code = code
+		}
+
+		if errx.Message == "" {
+			errx.Message = http.StatusText(errx.Code)
+		}
+
+		render.Status(r, errx.Code)
 
 		if logger := middleware.GetLogEntry(r); logger != nil {
 			logger.Panic(err, debug.Stack())
-		}
-
-		code, ok := r.Context().Value(render.StatusCtxKey).(int)
-
-		if !ok {
-			code = http.StatusInternalServerError
-			render.Status(r, code)
-		}
-
-		errx := errorx.New(code, http.StatusText(code))
-
-		if errs, ok := err.(*multierror.Error); ok {
-			for _, err := range errs.Errors {
-				errx.Details = append(errx.Details, err.Error())
-			}
-		} else if verrs, ok := err.(validator.ValidationErrors); ok {
-			for _, verr := range verrs {
-				if ferr, ok := verr.(error); ok {
-					errx.Details = append(errx.Details, ferr.Error())
-				}
-			}
-		} else {
-			errx.Details = append(errx.Details, err.Error())
 		}
 
 		v = errx
