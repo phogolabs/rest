@@ -18,6 +18,7 @@ require (
 	github.com/onsi/gomega v1.4.3
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rollbar/rollbar-go v1.0.2
 	github.com/stretchr/testify v1.2.2 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.24.0

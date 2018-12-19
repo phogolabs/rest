@@ -1,10 +1,10 @@
 package rest
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"runtime/debug"
 
 	"github.com/go-chi/render"
 	"github.com/go-playground/form"
@@ -69,6 +69,8 @@ func StatusErr(r *http.Request, err error) {
 	}
 
 	render.Status(r, code)
+
+	*r = *r.WithContext(context.WithValue(r.Context(), middleware.ErrorCtxKey, err))
 }
 
 // WrapError creates a new error
@@ -136,11 +138,6 @@ func response(r *http.Request, v interface{}) interface{} {
 		}
 
 		render.Status(r, errx.Code)
-
-		if logger := middleware.GetLogEntry(r); logger != nil {
-			logger.Panic(err, debug.Stack())
-		}
-
 		return errx
 	}
 
