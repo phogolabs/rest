@@ -141,9 +141,23 @@ func (e *LogEntry) Panic(v interface{}, stack []byte) {
 
 	e.logger.WithFields(info).Error("occurred")
 
+	RollbarMessage(rollbar.CRIT, e.request, "occurred", info)
+}
+
+// RollbarError reports errors to rollbar
+func RollbarError(level string, r *http.Request, err error) {
 	if rollbar.Token() == "" {
 		return
 	}
 
-	rollbar.RequestMessageWithExtras(rollbar.CRIT, e.request, "occurred", info)
+	rollbar.RequestError(level, r, err)
+}
+
+// RollbarMessage reports errors to rollbar
+func RollbarMessage(level string, r *http.Request, msg string, attr map[string]interface{}) {
+	if rollbar.Token() == "" {
+		return
+	}
+
+	rollbar.RequestMessageWithExtras(level, r, msg, attr)
 }

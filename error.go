@@ -9,17 +9,22 @@ import (
 	"github.com/go-playground/form"
 	"github.com/goware/errorx"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/phogolabs/rest/middleware"
 	rollbar "github.com/rollbar/rollbar-go"
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
+var (
+	// RollbarError reports errors to rollbar
+	RollbarError = middleware.RollbarError
+
+	// RollbarMessage reports errors to rollbar
+	RollbarMessage = middleware.RollbarMessage
+)
+
 // Error injects the error withing the request
 func Error(w http.ResponseWriter, r *http.Request, err error) {
-	code, ok := r.Context().Value(render.StatusCtxKey).(int)
-	if !ok {
-		code = http.StatusInternalServerError
-		Status(r, code)
-	}
+	code := errorCode(r)
 
 	RollbarError(rollbar.ERR, r, err)
 
@@ -33,11 +38,7 @@ func Error(w http.ResponseWriter, r *http.Request, err error) {
 
 // ErrorXML injects the error withing the request
 func ErrorXML(w http.ResponseWriter, r *http.Request, err error) {
-	code, ok := r.Context().Value(render.StatusCtxKey).(int)
-	if !ok {
-		code = http.StatusInternalServerError
-		Status(r, code)
-	}
+	code := errorCode(r)
 
 	RollbarError(rollbar.ERR, r, err)
 
@@ -51,11 +52,7 @@ func ErrorXML(w http.ResponseWriter, r *http.Request, err error) {
 
 // ErrorJSON injects the error withing the request
 func ErrorJSON(w http.ResponseWriter, r *http.Request, err error) {
-	code, ok := r.Context().Value(render.StatusCtxKey).(int)
-	if !ok {
-		code = http.StatusInternalServerError
-		Status(r, code)
-	}
+	code := errorCode(r)
 
 	RollbarError(rollbar.ERR, r, err)
 
@@ -117,11 +114,12 @@ func WrapError(code int, err error) *errorx.Errorx {
 	return errx
 }
 
-// RollbarError reports errors to rollbar
-func RollbarError(level string, r *http.Request, err error) {
-	if rollbar.Token() == "" {
-		return
+func errorCode(r *http.Request) int {
+	code, ok := r.Context().Value(render.StatusCtxKey).(int)
+	if !ok {
+		code = http.StatusInternalServerError
+		Status(r, code)
 	}
 
-	rollbar.RequestError(level, r, err)
+	return code
 }
