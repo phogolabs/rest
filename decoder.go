@@ -10,19 +10,38 @@ import (
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
-var (
-	// Decode is a package-level variable set to our default Decoder. We do this
-	// because it allows you to set render.Decode to another function with the
-	// same function signature, while also utilizing the render.Decoder() function
-	// itself. Effectively, allowing you to easily add your own logic to the package
-	// defaults. For example, maybe you want to impose a limit on the number of
-	// bytes allowed to be read from the request body.
-	Decode = DefaultDecoder
-
-	// Bind decodes a request body and executes the Binder method of the
-	// payload structure.
-	Bind = render.Bind
+type (
+	// Binder interface for managing request payloads.
+	Binder = render.Binder
 )
+
+// Bind decodes a request body and executes the Binder method of the
+// payload structure.
+func Bind(r *http.Request, v Binder) error {
+	err := render.Bind(r, v)
+
+	if err == nil {
+		err = Validate(r, v)
+	}
+
+	return err
+}
+
+// Decode is a package-level variable set to our default Decoder. We do this
+// because it allows you to set render.Decode to another function with the
+// same function signature, while also utilizing the render.Decoder() function
+// itself. Effectively, allowing you to easily add your own logic to the package
+// defaults. For example, maybe you want to impose a limit on the number of
+// bytes allowed to be read from the request body.
+func Decode(r *http.Request, v interface{}) error {
+	err := DefaultDecoder(r, v)
+
+	if err == nil {
+		err = Validate(r, v)
+	}
+
+	return err
+}
 
 // DefaultDecoder is the default decoder
 func DefaultDecoder(r *http.Request, v interface{}) error {
@@ -39,10 +58,6 @@ func DefaultDecoder(r *http.Request, v interface{}) error {
 		err = decoder.Decode(v, r.Form)
 	default:
 		err = render.DefaultDecoder(r, v)
-	}
-
-	if err == nil {
-		err = Validate(r, v)
 	}
 
 	return err

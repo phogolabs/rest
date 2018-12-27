@@ -47,3 +47,8 @@ var (
 	// NoContent returns a HTTP 204 "No Content" response.
 	NoContent = render.NoContent
 )
+
+type (
+	// Renderer interface for managing response payloads.
+	Renderer = render.Renderer
+)
