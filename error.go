@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/render"
 	"github.com/go-playground/form"
@@ -88,6 +89,12 @@ func ErrorCode(err error) int {
 			code = http.StatusBadRequest
 		case *errorx.Errorx:
 			code = terr.Code
+		default:
+			msg := err.Error()
+			switch {
+			case strings.HasPrefix(msg, "uuid: incorrect UUID"):
+				code = http.StatusBadRequest
+			}
 		}
 	}
 
