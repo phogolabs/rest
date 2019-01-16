@@ -29,7 +29,7 @@ func TestREST(t *testing.T) {
 }
 
 func NewFormRequest(v url.Values) *http.Request {
-	r := httptest.NewRequest("POST", "http://example.com", strings.NewReader(v.Encode()))
+	r := httptest.NewRequest("POST", "/v1/users", strings.NewReader(v.Encode()))
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	return r
 }

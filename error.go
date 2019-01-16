@@ -1,109 +1,106 @@
 package rest
 
 import (
-	"database/sql"
-	"encoding/json"
 	"net/http"
-	"strings"
 
+	"github.com/apex/log"
 	"github.com/go-chi/render"
-	"github.com/go-playground/form"
+	"github.com/go-playground/errors"
 	"github.com/goware/errorx"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/phogolabs/rest/middleware"
 	rollbar "github.com/rollbar/rollbar-go"
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
-var (
-	// RollbarError reports errors to rollbar
-	RollbarError = middleware.RollbarError
-
-	// RollbarMessage reports errors to rollbar
-	RollbarMessage = middleware.RollbarMessage
-)
-
-// Error injects the error withing the request
+// Error injects the error within the request
 func Error(w http.ResponseWriter, r *http.Request, err error) {
-	code := errorCode(r)
+	err = errorChain(r, err)
 
-	RollbarError(rollbar.ERR, r, err)
+	errorReport(r, err)
+	errorStatus(r, err)
 
-	GetLogger(r).
-		WithError(err).
-		WithField("status", code).
-		Error("occurred")
-
-	Respond(w, r, WrapError(code, err))
+	Respond(w, r, errorWrap(err))
 }
 
-// ErrorXML injects the error withing the request
+// ErrorXML injects the error within the request
 func ErrorXML(w http.ResponseWriter, r *http.Request, err error) {
-	code := errorCode(r)
+	err = errorChain(r, err)
 
-	RollbarError(rollbar.ERR, r, err)
+	errorReport(r, err)
+	errorStatus(r, err)
 
-	GetLogger(r).
-		WithError(err).
-		WithField("status", code).
-		Error("occurred")
-
-	XML(w, r, WrapError(code, err))
+	XML(w, r, errorWrap(err))
 }
 
-// ErrorJSON injects the error withing the request
+// ErrorJSON injects the error within the request
 func ErrorJSON(w http.ResponseWriter, r *http.Request, err error) {
-	code := errorCode(r)
+	err = errorChain(r, err)
 
-	RollbarError(rollbar.ERR, r, err)
+	errorReport(r, err)
+	errorStatus(r, err)
 
-	GetLogger(r).
-		WithError(err).
-		WithField("status", code).
-		Error("occurred")
-
-	JSON(w, r, WrapError(code, err))
+	JSON(w, r, errorWrap(err))
 }
 
-// ErrorStatus returns the status code for given error
-func ErrorStatus(r *http.Request, err error) {
-	render.Status(r, ErrorCode(err))
-}
+func errorChain(r *http.Request, err error) error {
+	ch, ok := err.(errors.Chain)
 
-// ErrorCode returns the code for given error
-func ErrorCode(err error) int {
-	code := http.StatusInternalServerError
-
-	switch err {
-	case sql.ErrNoRows:
-		code = http.StatusNotFound
-	default:
-		switch terr := err.(type) {
-		case validator.ValidationErrors:
-			code = http.StatusUnprocessableEntity
-		case form.DecodeErrors:
-			code = http.StatusBadRequest
-		case *json.UnmarshalFieldError:
-			code = http.StatusBadRequest
-		case *json.UnmarshalTypeError:
-			code = http.StatusBadRequest
-		case *errorx.Errorx:
-			code = terr.Code
-		default:
-			msg := err.Error()
-			switch {
-			case strings.HasPrefix(msg, "uuid: incorrect UUID"):
-				code = http.StatusBadRequest
-			}
-		}
+	if !ok {
+		ch = errors.Wrap(err, "request")
 	}
 
-	return code
+	if code, ok := errors.LookupTag(ch, "status").(int); !ok {
+		if code, ok = r.Context().Value(render.StatusCtxKey).(int); !ok {
+			code = http.StatusInternalServerError
+		}
+
+		ch = ch.AddTag("status", code)
+	}
+
+	return ch
 }
 
-// WrapError creates a new error
-func WrapError(code int, err error) *errorx.Errorx {
+func errorReport(r *http.Request, err error) {
+	status := errors.LookupTag(err, "status").(int)
+
+	fields := log.Fields{
+		"status": status,
+	}
+
+	logger := GetLogger(r).
+		WithError(err).
+		WithFields(fields)
+
+	switch {
+	case status >= 500:
+		logger.Error("occurred")
+	case status >= 400:
+		logger.Warn("occurred")
+	default:
+		logger.Info("occurred")
+	}
+
+	if rollbar.Token() == "" {
+		return
+	}
+
+	switch {
+	case status >= 500:
+		rollbar.RequestErrorWithExtras(rollbar.ERR, r, err, fields)
+	case status >= 400:
+		rollbar.RequestErrorWithExtras(rollbar.WARN, r, err, fields)
+	}
+}
+
+func errorStatus(r *http.Request, err error) {
+	status := errors.LookupTag(err, "status").(int)
+	Status(r, status)
+}
+
+func errorWrap(err error) *errorx.Errorx {
+	code := errors.LookupTag(err, "status").(int)
 	errx := errorx.New(code, http.StatusText(code))
+	err = errors.Cause(err)
 
 	if errs, ok := err.(*multierror.Error); ok {
 		for _, err := range errs.Errors {
@@ -119,14 +116,4 @@ func WrapError(code int, err error) *errorx.Errorx {
 		errx.Details = append(errx.Details, err.Error())
 	}
 	return errx
-}
-
-func errorCode(r *http.Request) int {
-	code, ok := r.Context().Value(render.StatusCtxKey).(int)
-	if !ok {
-		code = http.StatusInternalServerError
-		Status(r, code)
-	}
-
-	return code
 }

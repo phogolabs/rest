@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/render"
+	"github.com/go-playground/errors"
 	"github.com/go-playground/form"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -51,13 +52,16 @@ func DefaultDecoder(r *http.Request, v interface{}) error {
 	case render.ContentTypeForm:
 		decoder := form.NewDecoder()
 
-		if err = r.ParseForm(); err != nil {
-			return err
+		if err = r.ParseForm(); err == nil {
+			err = decoder.Decode(v, r.Form)
 		}
 
-		err = decoder.Decode(v, r.Form)
 	default:
 		err = render.DefaultDecoder(r, v)
+	}
+
+	if err != nil {
+		err = errors.WrapSkipFrames(err, "decode", 2).AddTag("status", http.StatusBadRequest)
 	}
 
 	return err
@@ -69,7 +73,7 @@ func Validate(r *http.Request, data interface{}) error {
 
 	for key, fn := range validationFuncMap {
 		if err := v.RegisterValidation(key, fn); err != nil {
-			return err
+			return errors.WrapSkipFrames(err, "validate", 2).AddTag("status", http.StatusInternalServerError)
 		}
 	}
 
@@ -87,7 +91,7 @@ func Validate(r *http.Request, data interface{}) error {
 	})
 
 	if err := v.StructCtx(r.Context(), data); err != nil {
-		return err
+		return errors.WrapSkipFrames(err, "validate", 2).AddTag("status", http.StatusUnprocessableEntity)
 	}
 
 	return nil

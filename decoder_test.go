@@ -6,6 +6,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"github.com/go-playground/errors"
 	"github.com/phogolabs/rest"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -33,7 +35,8 @@ var _ = Describe("Decoder", func() {
 				entity := Person{}
 				request := NewFormRequest(v)
 
-				Expect(rest.Decode(request, &entity)).To(MatchError("Field Namespace:age ERROR:Invalid Unsigned Integer Value '-22' Type 'uint' Namespace 'age'"))
+				err := errors.Cause(rest.Decode(request, &entity))
+				Expect(err).To(MatchError("Field Namespace:age ERROR:Invalid Unsigned Integer Value '-22' Type 'uint' Namespace 'age'"))
 			})
 		})
 	})
@@ -55,7 +58,8 @@ var _ = Describe("Decoder", func() {
 				entity := Contact{}
 				request := NewFormRequest(v)
 
-				Expect(rest.Decode(request, &entity)).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
+				err := errors.Cause(rest.Decode(request, &entity))
+				Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
 			})
 		})
 
@@ -67,7 +71,8 @@ var _ = Describe("Decoder", func() {
 				entity := Person{}
 				request := NewFormRequest(v)
 
-				Expect(rest.Decode(request, &entity).Error()).To(Equal("Key: 'Person.age' Error:Field validation for 'age' failed on the 'gte' tag"))
+				err := errors.Cause(rest.Decode(request, &entity))
+				Expect(err).To(MatchError("Key: 'Person.age' Error:Field validation for 'age' failed on the 'gte' tag"))
 			})
 		})
 	})
