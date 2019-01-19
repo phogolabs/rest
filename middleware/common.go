@@ -29,14 +29,6 @@ var (
 	// compression level.
 	DefaultCompress = middleware.DefaultCompress
 
-	// GetLogEntry returns the in-context LogEntry for a request.
-	GetLogEntry = middleware.GetLogEntry
-
-	// Recoverer is a middleware that recovers from panics, logs the panic (and a
-	// backtrace), and returns a HTTP 500 (Internal Server Error) status if
-	// possible. Recoverer prints a request ID if one is provided.
-	Recoverer = middleware.Recoverer
-
 	// NoCache is a simple piece of middleware that sets a number of HTTP headers to prevent
 	// a router (or subrouter) from being cached by an upstream proxy and/or client.
 	NoCache = middleware.NoCache

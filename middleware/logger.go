@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,36 +13,21 @@ import (
 	"github.com/apex/log/handlers/json"
 	"github.com/apex/log/handlers/text"
 	"github.com/go-chi/chi/middleware"
-	rollbar "github.com/rollbar/rollbar-go"
 )
 
-var (
-	// DefaultLogFormatter is the default log formatter
-	DefaultLogFormatter = LogFormatterFunc(NewLogEntry)
+// LoggerCtxKey is the context.Context key to store the request log entry.
+var LoggerCtxKey = &ContextKey{"Logger"}
 
-	// DefaultRequestLogger is the default logger
-	DefaultRequestLogger = middleware.RequestLogger(DefaultLogFormatter)
-)
-
-var (
-	_ middleware.LogEntry     = &LogEntry{}
-	_ middleware.LogFormatter = LogFormatterFunc(NewLogEntry)
-)
-
-// Logger is a middleware that logs the start and end of each request, along
-// with some useful data about what was requested, what the response status was,
-// and how long it took to return.
-func Logger(next http.Handler) http.Handler {
-	return DefaultRequestLogger(next)
-}
-
-// GetLogger returns the associated request logger
-func GetLogger(r *http.Request) log.Interface {
-	if entry, ok := GetLogEntry(r).(*LogEntry); ok {
-		return entry.logger
-	}
-
-	return log.Log
+// LoggerConfig configures the logger
+type LoggerConfig struct {
+	// Fields of the root logger
+	Fields log.Fields
+	// Level is the logger's level (info, error, debug, verbose and etc.)
+	Level string
+	// Format of the log (json, text or cli)
+	Format string
+	// Output of the log
+	Output io.Writer
 }
 
 // SetLogger sets the logger
@@ -72,92 +58,61 @@ func SetLogger(cfg *LoggerConfig) error {
 	return nil
 }
 
-// LogFormatterFunc is a function which implements middleware.LogFormatter
-type LogFormatterFunc func(r *http.Request) *LogEntry
+// Logger is a middleware that logs the start and end of each request, along
+// with some useful data about what was requested, what the response status was,
+// and how long it took to return.
+func Logger(next http.Handler) http.Handler {
+	scheme := func(r *http.Request) string {
+		proto := "http"
 
-// NewLogEntry creates a new log entry
-func (f LogFormatterFunc) NewLogEntry(r *http.Request) middleware.LogEntry {
-	return f(r)
-}
+		if r.TLS != nil {
+			proto = "https"
+		}
 
-// LoggerConfig configures the logger
-type LoggerConfig struct {
-	// Fields of the root logger
-	Fields log.Fields
-	// Level is the logger's level (info, error, debug, verbose and etc.)
-	Level string
-	// Format of the log (json, text or cli)
-	Format string
-	// Output of the log
-	Output io.Writer
-}
-
-// LogEntry records the final log when a request completes.
-// See defaultLogEntry for an example implementation.
-type LogEntry struct {
-	request *http.Request
-	logger  log.Interface
-}
-
-// NewLogEntry creates a new log entry
-func NewLogEntry(request *http.Request) *LogEntry {
-	return &LogEntry{
-		request: request,
-		logger: log.WithFields(log.Fields{
-			"url":        request.RequestURI,
-			"proto":      request.Proto,
-			"method":     request.Method,
-			"remoteAddr": request.RemoteAddr,
-		}),
-	}
-}
-
-// Write logs responses
-func (e *LogEntry) Write(status, bytes int, elapsed time.Duration) {
-	logger := e.logger.WithFields(log.Fields{
-		"status":   status,
-		"size":     bytes,
-		"duration": elapsed,
-	})
-
-	err := fmt.Errorf(strings.ToLower(http.StatusText(status)))
-
-	switch {
-	case status >= 500:
-		logger.WithError(err).Error("response")
-	case status >= 400:
-		logger.WithError(err).Warn("response")
-	default:
-		logger.Info("response")
-	}
-}
-
-// Panic logs the panic errors
-func (e *LogEntry) Panic(v interface{}, stack []byte) {
-	info := log.Fields{
-		"panic":  v,
-		"source": string(stack),
+		return proto
 	}
 
-	e.logger.WithFields(info).Error("occurred")
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		logger := log.WithFields(log.Fields{
+			"scheme":     scheme(r),
+			"host":       r.Host,
+			"url":        r.RequestURI,
+			"proto":      r.Proto,
+			"method":     r.Method,
+			"remoteAddr": r.RemoteAddr,
+			"requestId":  middleware.GetReqID(r.Context()),
+		})
 
-	RollbarMessage(rollbar.CRIT, e.request, "occurred", info)
-}
+		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+		ctx := context.WithValue(r.Context(), LoggerCtxKey, logger)
 
-// RollbarError reports errors to rollbar
-func RollbarError(level string, r *http.Request, err error) {
-	if rollbar.Token() == "" {
-		return
+		start := time.Now()
+		next.ServeHTTP(writer, r.WithContext(ctx))
+
+		logger = logger.WithFields(log.Fields{
+			"status":   writer.Status(),
+			"size":     writer.BytesWritten(),
+			"duration": time.Since(start),
+		})
+
+		switch {
+		case writer.Status() >= 500:
+			logger.Error("response")
+		case writer.Status() >= 400:
+			logger.Warn("response")
+		default:
+			logger.Info("response")
+		}
 	}
 
-	rollbar.RequestError(level, r, err)
+	return http.HandlerFunc(fn)
 }
 
-// RollbarMessage reports errors to rollbar
-func RollbarMessage(level string, r *http.Request, msg string, attr map[string]interface{}) {
-	if rollbar.Token() == "" {
-		return
+// GetLogger returns the associated request logger
+func GetLogger(r *http.Request) log.Interface {
+	if logger, ok := r.Context().Value(LoggerCtxKey).(log.Interface); ok {
+		return logger
 	}
 
-	rollbar.RequestMessageWithExtras(level, r, msg, attr)
+	return log.Log
 }
