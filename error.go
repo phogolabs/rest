@@ -46,7 +46,7 @@ func errorChain(r *http.Request, err error) error {
 	ch, ok := err.(errors.Chain)
 
 	if !ok {
-		ch = errors.Wrap(err, "request")
+		ch = errors.WrapSkipFrames(err, "request", 2)
 	}
 
 	if code, ok := errors.LookupTag(ch, "status").(int); !ok {
@@ -80,7 +80,7 @@ func errorReport(r *http.Request, err error) {
 		logger.Info("occurred")
 	}
 
-	if rollbar.Token() == "" {
+	if rollbar.Token() == "" || errors.HasType(err, "transient") {
 		return
 	}
 
