@@ -58,10 +58,8 @@ func SetLogger(cfg *LoggerConfig) error {
 	return nil
 }
 
-// Logger is a middleware that logs the start and end of each request, along
-// with some useful data about what was requested, what the response status was,
-// and how long it took to return.
-func Logger(next http.Handler) http.Handler {
+// LoggerFields returns the logger's fields
+func LoggerFields(r *http.Request) log.Fields {
 	scheme := func(r *http.Request) string {
 		proto := "http"
 
@@ -72,16 +70,23 @@ func Logger(next http.Handler) http.Handler {
 		return proto
 	}
 
+	return log.Fields{
+		"scheme":      scheme(r),
+		"host":        r.Host,
+		"url":         r.RequestURI,
+		"proto":       r.Proto,
+		"method":      r.Method,
+		"remote_addr": r.RemoteAddr,
+		"request_id":  middleware.GetReqID(r.Context()),
+	}
+}
+
+// Logger is a middleware that logs the start and end of each request, along
+// with some useful data about what was requested, what the response status was,
+// and how long it took to return.
+func Logger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		logger := log.WithFields(log.Fields{
-			"scheme":      scheme(r),
-			"host":        r.Host,
-			"url":         r.RequestURI,
-			"proto":       r.Proto,
-			"method":      r.Method,
-			"remote_addr": r.RemoteAddr,
-			"request_id":  middleware.GetReqID(r.Context()),
-		})
+		logger := log.WithFields(LoggerFields(r))
 
 		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		ctx := context.WithValue(r.Context(), LoggerCtxKey, logger)

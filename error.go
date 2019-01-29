@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/errors"
 	"github.com/goware/errorx"
 	multierror "github.com/hashicorp/go-multierror"
+	"github.com/phogolabs/rest/middleware"
 	rollbar "github.com/rollbar/rollbar-go"
 	validator "gopkg.in/go-playground/validator.v9"
 )
@@ -92,6 +93,9 @@ func errorReport(r *http.Request, err error) {
 	if !enabled {
 		return
 	}
+
+	fields = middleware.LoggerFields(r)
+	fields["status"] = status
 
 	switch {
 	case status >= 500:
