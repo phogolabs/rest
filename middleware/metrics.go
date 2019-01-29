@@ -2,54 +2,44 @@ package middleware
 
 import (
 	"net/http"
-	"time"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Metrics enables metrics for each request
 func Metrics(next http.Handler) http.Handler {
 	labels := []string{
-		"request_id",
-		"method",
-		"url",
 		"code",
+		"method",
 	}
 
-	gauge := prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "rest",
-		Subsystem: "http",
-		Name:      "request_count",
-		Help:      "How many HTTP requests processed, partitioned by status code, method and HTTP path.",
-	}, labels[0:3])
+	connTotal := promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "http_client_connected",
+		Help: "Number of active client connections",
+	})
 
-	histogram := prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Namespace: "rest",
-		Subsystem: "http",
-		Name:      "request_duration_seconds",
-		Help:      "The latency of the HTTP requests.",
-		Buckets:   prometheus.DefBuckets,
+	reqTotal := promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "http_requests_total",
+		Help: "total HTTP requests processed",
 	}, labels)
 
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		id := middleware.GetReqID(r.Context())
-		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+	respTime := promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "http_response_duration_seconds",
+		Help:    "Histogram of response time for handler",
+		Buckets: prometheus.DefBuckets,
+	}, labels)
 
-		gauge := gauge.WithLabelValues(id, r.Method, r.RequestURI)
-		gauge.Add(1)
+	headerTime := promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "http_response_header_duration_seconds",
+		Help:    "Histogram of header write time for handler",
+		Buckets: prometheus.DefBuckets,
+	}, labels)
 
-		start := time.Now()
-
-		next.ServeHTTP(writer, r)
-
-		duration := time.Since(start).Seconds()
-		code := http.StatusText(writer.Status())
-
-		histogram.WithLabelValues(id, r.Method, r.RequestURI, code).Observe(duration)
-
-		gauge.Dec()
-	}
-
-	return http.HandlerFunc(fn)
+	return promhttp.InstrumentHandlerInFlight(connTotal,
+		promhttp.InstrumentHandlerCounter(reqTotal,
+			promhttp.InstrumentHandlerDuration(respTime,
+				promhttp.InstrumentHandlerTimeToWriteHeader(headerTime,
+					next))))
 }
