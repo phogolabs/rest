@@ -20,7 +20,7 @@ func Recoverer(next http.Handler) http.Handler {
 				w.WriteHeader(http.StatusInternalServerError)
 
 				fields := log.Fields{
-					"panic": rvr,
+					"error": rvr,
 					"stack": string(debug.Stack()),
 				}
 
@@ -30,7 +30,7 @@ func Recoverer(next http.Handler) http.Handler {
 					return
 				}
 
-				rollbar.RequestMessageWithExtras(rollbar.CRIT, r, "occurred", fields)
+				rollbar.RequestMessageWithExtras(rollbar.CRIT, r, "panic", fields)
 			}
 		}()
 

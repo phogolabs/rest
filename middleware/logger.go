@@ -74,13 +74,13 @@ func Logger(next http.Handler) http.Handler {
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		logger := log.WithFields(log.Fields{
-			"scheme":     scheme(r),
-			"host":       r.Host,
-			"url":        r.RequestURI,
-			"proto":      r.Proto,
-			"method":     r.Method,
-			"remoteAddr": r.RemoteAddr,
-			"requestId":  middleware.GetReqID(r.Context()),
+			"scheme":      scheme(r),
+			"host":        r.Host,
+			"url":         r.RequestURI,
+			"proto":       r.Proto,
+			"method":      r.Method,
+			"remote_addr": r.RemoteAddr,
+			"request_id":  middleware.GetReqID(r.Context()),
 		})
 
 		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
