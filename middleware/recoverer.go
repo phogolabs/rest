@@ -21,7 +21,7 @@ func Recoverer(next http.Handler) http.Handler {
 
 				fields := log.Fields{
 					"panic": rvr,
-					"stack": debug.Stack(),
+					"stack": string(debug.Stack()),
 				}
 
 				GetLogger(r).WithFields(fields).Error("panic")
