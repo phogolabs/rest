@@ -16,23 +16,23 @@ func Metrics(next http.Handler) http.Handler {
 	}
 
 	connTotal := promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "http_client_connected",
+		Name: "go_http_client_connected",
 		Help: "Number of active client connections",
 	})
 
 	reqTotal := promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "http_requests_total",
+		Name: "go_http_requests_total",
 		Help: "total HTTP requests processed",
 	}, labels)
 
 	respTime := promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "http_response_duration_seconds",
+		Name:    "go_http_response_duration_seconds",
 		Help:    "Histogram of response time for handler",
 		Buckets: prometheus.DefBuckets,
 	}, labels)
 
 	headerTime := promauto.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "http_response_header_duration_seconds",
+		Name:    "go_http_response_header_duration_seconds",
 		Help:    "Histogram of header write time for handler",
 		Buckets: prometheus.DefBuckets,
 	}, labels)
