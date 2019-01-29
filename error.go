@@ -80,7 +80,16 @@ func errorReport(r *http.Request, err error) {
 		logger.Info("occurred")
 	}
 
-	if rollbar.Token() == "" || errors.HasType(err, "transient") {
+	if rollbar.Token() == "" {
+		return
+	}
+
+	enabled, ok := errors.LookupTag(err, "rollbar").(bool)
+	if !ok {
+		enabled = true
+	}
+
+	if !enabled {
 		return
 	}
 
