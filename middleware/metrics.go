@@ -65,8 +65,12 @@ func InstrumentHandlerInFlight(g *prometheus.GaugeVec, next http.Handler) http.H
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gauge := g.With(InstrumentLabels(r))
 		gauge.Inc()
-		defer gauge.Dec()
 		next.ServeHTTP(w, r)
+
+		go func() {
+			time.Sleep(100 * time.Millisecond)
+			gauge.Dec()
+		}()
 	})
 }
 
