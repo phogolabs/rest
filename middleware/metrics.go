@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,11 +20,11 @@ func Metrics(next http.Handler) http.Handler {
 		"method",
 	}
 
-	reqInflight := promauto.NewGauge(prometheus.GaugeOpts{
+	reqInflight := promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Subsystem: "http",
 		Name:      "requests_in_flight",
 		Help:      "The HTTP requests in flight",
-	})
+	}, labels[2:])
 
 	reqTotal := promauto.NewCounterVec(prometheus.CounterOpts{
 		Subsystem: "http",
@@ -62,8 +61,9 @@ func Metrics(next http.Handler) http.Handler {
 // requests currently handled by the wrapped http.Handler.
 //
 // See the example for InstrumentHandlerDuration for example usage.
-func InstrumentHandlerInFlight(gauge prometheus.Gauge, next http.Handler) http.Handler {
+func InstrumentHandlerInFlight(g *prometheus.GaugeVec, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gauge := g.With(InstrumentLabels(r))
 		gauge.Inc()
 		defer gauge.Dec()
 		next.ServeHTTP(w, r)
@@ -118,11 +118,10 @@ func InstrumentHandlerDuration(obs prometheus.ObserverVec, next http.Handler) ht
 // InstrumentLabels returns the instrument labels
 func InstrumentLabels(r *http.Request, keys ...string) prometheus.Labels {
 	ctx := r.Context()
-	rctx := chi.RouteContext(ctx)
 
 	labels := prometheus.Labels{
-		"handler": rctx.RoutePattern(),
-		"method":  rctx.RouteMethod,
+		"handler": r.RequestURI,
+		"method":  r.Method,
 	}
 
 	for _, key := range keys {
