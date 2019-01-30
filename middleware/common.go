@@ -35,6 +35,15 @@ var (
 
 	// SetContentType is a middleware that forces response Content-Type.
 	SetContentType = render.SetContentType
+
+	// GetReqID returns a request ID from the given context if one is present.
+	// Returns the empty string if a request ID cannot be found.
+	GetReqID = middleware.GetReqID
+
+	// Status sets a HTTP response status code hint into request context at any point
+	// during the request life-cycle. Before the Responder sends its response header
+	// it will check the StatusCtxKey
+	Status = render.Status
 )
 
 // ContextKey is a value for use with context.WithValue. It's used as
