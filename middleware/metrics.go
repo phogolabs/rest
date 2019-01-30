@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -62,15 +63,18 @@ func Metrics(next http.Handler) http.Handler {
 //
 // See the example for InstrumentHandlerDuration for example usage.
 func InstrumentHandlerInFlight(g *prometheus.GaugeVec, next http.Handler) http.Handler {
+	decrement := func(ctx context.Context, gauge prometheus.Gauge) {
+		<-ctx.Done()
+		gauge.Dec()
+	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gauge := g.With(InstrumentLabels(r))
 		gauge.Inc()
+
 		next.ServeHTTP(w, r)
 
-		go func() {
-			time.Sleep(100 * time.Millisecond)
-			gauge.Dec()
-		}()
+		go decrement(r.Context(), gauge)
 	})
 }
 
