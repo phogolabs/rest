@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus"
@@ -20,21 +21,21 @@ func Metrics(next http.Handler) http.Handler {
 		"method",
 	}
 
-	reqInflight := promauto.NewGaugeVec(prometheus.GaugeOpts{
+	reqInflight := promauto.NewGauge(prometheus.GaugeOpts{
 		Subsystem: "http",
 		Name:      "requests_in_flight",
 		Help:      "The HTTP requests in flight",
-	}, labels[2:])
+	})
 
 	reqTotal := promauto.NewCounterVec(prometheus.CounterOpts{
 		Subsystem: "http",
 		Name:      "requests_total",
 		Help:      "Total number of HTTP requests made",
-	}, labels[2:])
+	}, labels[1:])
 
-	respTime := promauto.NewHistogramVec(prometheus.HistogramOpts{
+	reqTime := promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Subsystem: "http",
-		Name:      "response_duration_seconds",
+		Name:      "request_duration_seconds",
 		Help:      "The HTTP response duration time",
 		Buckets:   prometheus.DefBuckets,
 	}, labels)
@@ -48,7 +49,7 @@ func Metrics(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		handler := InstrumentHandlerInFlight(reqInflight,
 			InstrumentHandlerCounter(reqTotal,
-				InstrumentHandlerDuration(respTime, hn)))
+				InstrumentHandlerDuration(reqTime, hn)))
 
 		handler.ServeHTTP(w, r)
 	}
@@ -61,9 +62,8 @@ func Metrics(next http.Handler) http.Handler {
 // requests currently handled by the wrapped http.Handler.
 //
 // See the example for InstrumentHandlerDuration for example usage.
-func InstrumentHandlerInFlight(g *prometheus.GaugeVec, next http.Handler) http.Handler {
+func InstrumentHandlerInFlight(gauge prometheus.Gauge, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gauge := g.With(InstrumentLabels(r))
 		gauge.Inc()
 		defer gauge.Dec()
 		next.ServeHTTP(w, r)
@@ -86,7 +86,7 @@ func InstrumentHandlerInFlight(g *prometheus.GaugeVec, next http.Handler) http.H
 func InstrumentHandlerCounter(counter *prometheus.CounterVec, next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		next.ServeHTTP(w, r)
-		counter.With(InstrumentLabels(r)).Inc()
+		counter.With(InstrumentLabels(r, "code")).Inc()
 	})
 }
 
@@ -118,10 +118,11 @@ func InstrumentHandlerDuration(obs prometheus.ObserverVec, next http.Handler) ht
 // InstrumentLabels returns the instrument labels
 func InstrumentLabels(r *http.Request, keys ...string) prometheus.Labels {
 	ctx := r.Context()
+	rctx := chi.RouteContext(ctx)
 
 	labels := prometheus.Labels{
-		"handler": r.URL.String(),
-		"method":  r.Method,
+		"handler": rctx.RoutePattern(),
+		"method":  rctx.RouteMethod,
 	}
 
 	for _, key := range keys {
