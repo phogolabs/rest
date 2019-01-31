@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -20,12 +19,6 @@ func Metrics(next http.Handler) http.Handler {
 		"handler",
 		"method",
 	}
-
-	reqInflight := promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Subsystem: "http",
-		Name:      "requests_in_flight",
-		Help:      "The HTTP requests in flight",
-	}, labels[2:])
 
 	reqTotal := promauto.NewCounterVec(prometheus.CounterOpts{
 		Subsystem: "http",
@@ -47,35 +40,13 @@ func Metrics(next http.Handler) http.Handler {
 	})
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		handler := InstrumentHandlerInFlight(reqInflight,
-			InstrumentHandlerCounter(reqTotal,
-				InstrumentHandlerDuration(reqTime, hn)))
+		handler := InstrumentHandlerCounter(reqTotal,
+			InstrumentHandlerDuration(reqTime, hn))
 
 		handler.ServeHTTP(w, r)
 	}
 
 	return http.HandlerFunc(fn)
-}
-
-// InstrumentHandlerInFlight is a middleware that wraps the provided
-// http.Handler. It sets the provided prometheus.Gauge to the number of
-// requests currently handled by the wrapped http.Handler.
-//
-// See the example for InstrumentHandlerDuration for example usage.
-func InstrumentHandlerInFlight(g *prometheus.GaugeVec, next http.Handler) http.Handler {
-	decrement := func(ctx context.Context, gauge prometheus.Gauge) {
-		<-ctx.Done()
-		gauge.Dec()
-	}
-
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		gauge := g.With(InstrumentLabels(r))
-		gauge.Inc()
-
-		next.ServeHTTP(w, r)
-
-		go decrement(r.Context(), gauge)
-	})
 }
 
 // InstrumentHandlerCounter is a middleware that wraps the provided http.Handler
