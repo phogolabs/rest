@@ -44,6 +44,12 @@ var (
 	// during the request life-cycle. Before the Responder sends its response header
 	// it will check the StatusCtxKey
 	Status = render.Status
+
+	// Heartbeat endpoint middleware useful to setting up a path like
+	// `/ping` that load balancers or uptime testing external services
+	// can make a request before hitting any routes. It's also convenient
+	// to place this above ACL middlewares as well.
+	Heartbeat = middleware.Heartbeat
 )
 
 // ContextKey is a value for use with context.WithValue. It's used as
