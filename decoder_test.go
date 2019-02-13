@@ -51,28 +51,52 @@ var _ = Describe("Decoder", func() {
 				})
 			})
 
-			It("validates the entity with it", func() {
-				v := url.Values{}
-				v.Add("phone", "555ZERO")
+			Context("when the Content-Tyoe = application/json", func() {
+				It("validates the entity with it", func() {
+					entity := &Contact{}
+					contact := &Contact{Phone: "088HIPPO"}
 
-				entity := Contact{}
-				request := NewFormRequest(v)
+					request := NewJSONRequest(contact)
 
-				err := errors.Cause(rest.Decode(request, &entity))
-				Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
+					err := errors.Cause(rest.Decode(request, entity))
+					Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
+				})
 			})
-		})
 
-		Context("when the validation fails", func() {
-			It("returns an error", func() {
-				v := url.Values{}
-				v.Add("age", "18")
+			Context("when the Content-Tyoe = application/xml", func() {
+				It("validates the entity with it", func() {
+					entity := &Contact{}
+					contact := &Contact{Phone: "088HIPPO"}
 
-				entity := Person{}
-				request := NewFormRequest(v)
+					request := NewXMLRequest(contact)
 
-				err := errors.Cause(rest.Decode(request, &entity))
-				Expect(err).To(MatchError("Key: 'Person.age' Error:Field validation for 'age' failed on the 'gte' tag"))
+					err := errors.Cause(rest.Decode(request, entity))
+					Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
+				})
+			})
+
+			Context("when the Content-Tyoe = application/www-x-form-urlencoded", func() {
+				It("validates the entity", func() {
+					v := url.Values{}
+					v.Add("phone", "555ZERO")
+
+					entity := &Contact{}
+					request := NewFormRequest(v)
+
+					err := errors.Cause(rest.Decode(request, entity))
+					Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
+				})
+			})
+
+			Context("when the Content-Tyoe = application/gob", func() {
+				It("validates the entity", func() {
+					contact := &Contact{Phone: "088HIPPO"}
+
+					request := NewGobRequest(contact)
+
+					err := errors.Cause(rest.Validate(request, contact))
+					Expect(err.Error()).To(Equal("Key: 'Contact.Phone' Error:Field validation for 'Phone' failed on the 'phone' tag"))
+				})
 			})
 		})
 	})

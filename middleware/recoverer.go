@@ -15,16 +15,18 @@ import (
 // Alternatively, look at https://github.com/pressly/lg middleware pkgs.
 func Recoverer(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
+		logger := GetLogger(r)
+
 		defer func() {
 			if rvr := recover(); rvr != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 
 				fields := log.Fields{
-					"error": rvr,
+					"cause": rvr,
 					"stack": string(debug.Stack()),
 				}
 
-				GetLogger(r).WithFields(fields).Error("panic")
+				logger.WithFields(fields).Error("panic")
 
 				if rollbar.Token() == "" {
 					return

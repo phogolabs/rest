@@ -94,8 +94,10 @@ func errorReport(r *http.Request, err error) {
 		return
 	}
 
-	fields = middleware.LoggerFields(r)
-	fields["status"] = status
+	fields = log.Fields{
+		"request_id": middleware.GetReqID(r.Context()),
+		"status":     status,
+	}
 
 	switch {
 	case status >= 500:

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
 	"github.com/prometheus/client_golang/prometheus"
@@ -97,10 +98,21 @@ func InstrumentHandlerDuration(obs prometheus.ObserverVec, next http.Handler) ht
 // InstrumentLabels returns the instrument labels
 func InstrumentLabels(r *http.Request, keys ...string) prometheus.Labels {
 	ctx := r.Context()
+	routeCtx := chi.RouteContext(ctx)
+
+	pattern := routeCtx.RoutePattern()
+	if pattern == "" {
+		pattern = r.RequestURI
+	}
+
+	method := routeCtx.RouteMethod
+	if method == "" {
+		method = r.Method
+	}
 
 	labels := prometheus.Labels{
-		"handler": r.RequestURI,
-		"method":  r.Method,
+		"handler": pattern,
+		"method":  method,
 	}
 
 	for _, key := range keys {
