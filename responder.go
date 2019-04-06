@@ -79,7 +79,7 @@ func ErrorJSON(w http.ResponseWriter, r *http.Request, err error) {
 }
 
 // EncodeHeader encodes a header
-func EncodeHeader(header http.Header, v interface{}) error {
+func EncodeHeader(w http.ResponseWriter, v interface{}) error {
 	encoder := form.NewEncoder()
 	encoder.SetTagName("header")
 
@@ -90,7 +90,7 @@ func EncodeHeader(header http.Header, v interface{}) error {
 
 	for k, values := range kv {
 		for _, v := range values {
-			header.Add(k, v)
+			w.Header().Add(k, v)
 		}
 	}
 

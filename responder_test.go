@@ -99,7 +99,7 @@ var _ = Describe("EncodeHeader", func() {
 		u := &User{ID: 2}
 		r := httptest.NewRecorder()
 
-		Expect(rest.EncodeHeader(r.Header(), u)).To(Succeed())
+		Expect(rest.EncodeHeader(r, u)).To(Succeed())
 		Expect(r.Header().Get("X-User-Id")).To(Equal("2"))
 	})
 })
