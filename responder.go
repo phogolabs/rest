@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"github.com/go-playground/form"
 )
 
 // Respond handles streaming JSON and XML responses, automatically setting the
@@ -75,4 +76,23 @@ func ErrorXML(w http.ResponseWriter, r *http.Request, err error) {
 // Deprecated: Use JSON instead
 func ErrorJSON(w http.ResponseWriter, r *http.Request, err error) {
 	JSON(w, r, err)
+}
+
+// EncodeHeader encodes a header
+func EncodeHeader(header http.Header, v interface{}) error {
+	encoder := form.NewEncoder()
+	encoder.SetTagName("header")
+
+	kv, err := encoder.Encode(v)
+	if err != nil {
+		return err
+	}
+
+	for k, values := range kv {
+		for _, v := range values {
+			header.Add(k, v)
+		}
+	}
+
+	return nil
 }
