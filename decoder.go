@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"io"
 	"net/http"
 	"net/url"
 
@@ -30,11 +31,13 @@ func Decode(r *http.Request, v interface{}) error {
 		err = errors.New("render: unable to automatically decode the request content type")
 	}
 
+	if err == io.EOF {
+		err = nil
+	}
+
 	if err != nil {
 		err = errors.WrapSkipFrames(err, "decode", 2).AddTag("status", http.StatusBadRequest)
 	}
-
-	//TODO: set defaults
 
 	if err == nil {
 		err = Validate(r, v)
@@ -63,10 +66,6 @@ func DecodePath(r *http.Request, v interface{}) error {
 		values = url.Values{}
 		ctx    = chi.RouteContext(r.Context())
 	)
-
-	if ctx == nil {
-		return nil
-	}
 
 	for index, key := range ctx.URLParams.Keys {
 		values.Add(key, ctx.URLParams.Values[index])

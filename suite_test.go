@@ -24,9 +24,22 @@ type (
 	decodeFn  = func(data interface{}) error
 )
 
+type Response struct {
+	Error error
+}
+
+func (b *Response) Render(w http.ResponseWriter, r *http.Request) error {
+	return b.Error
+}
+
+func (b *Response) Bind(r *http.Request) error {
+	return b.Error
+}
+
 type Person struct {
-	Name string `form:"name" xml:"name" json:"name,omitempty"`
-	Age  uint   `form:"age" xml:"age" json:"age,omitemoty" validate:"gte=21" `
+	Name    string `form:"name" xml:"name" json:"name,omitempty"`
+	Age     uint   `form:"age" xml:"age" json:"age,omitemoty" validate:"gte=21" `
+	Address string `default:"london"`
 }
 
 type Contact struct {

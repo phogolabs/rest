@@ -13,9 +13,7 @@ func Respond(w http.ResponseWriter, r *http.Request, v interface{}) {
 		v = errorf(r, err)
 	}
 
-	// TODO: set defaults
-	// TODO: set headers
-	render.Respond(w, r, v)
+	render.DefaultResponder(w, r, v)
 }
 
 // JSON marshals 'v' to JSON, automatically escaping HTML and setting the
@@ -25,8 +23,6 @@ func JSON(w http.ResponseWriter, r *http.Request, v interface{}) {
 		v = errorf(r, err)
 	}
 
-	// TODO: set defaults
-	// TODO: set headers
 	render.JSON(w, r, v)
 }
 
@@ -38,8 +34,6 @@ func XML(w http.ResponseWriter, r *http.Request, v interface{}) {
 		v = errorf(r, err)
 	}
 
-	// TODO: set defaults
-	// TODO: set headers
 	render.XML(w, r, v)
 }
 

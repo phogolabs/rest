@@ -84,7 +84,7 @@ var _ = Describe("Decode", func() {
 
 	Context("when the Content-Tyoe is UNKNOWN", func() {
 		BeforeEach(func() {
-			contact := &Contact{Phone: "088HIPPO"}
+			contact := &Contact{Phone: "+188123451"}
 			request = NewGobRequest(contact)
 		})
 
