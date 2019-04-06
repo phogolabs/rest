@@ -9,11 +9,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/phogolabs/rest"
+	validator "gopkg.in/go-playground/validator.v9"
 )
 
 type (
@@ -36,6 +39,14 @@ func TestREST(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Rest Suite")
 }
+
+var _ = BeforeSuite(func() {
+	rest.RegisterValidation("phone", func(field validator.FieldLevel) bool {
+		phoneRegexp := regexp.MustCompile("\\+[0-9]+")
+		value := field.Field().String()
+		return phoneRegexp.MatchString(value)
+	})
+})
 
 func NewJSONRequest(data interface{}) *http.Request {
 	buffer := &bytes.Buffer{}

@@ -13,34 +13,13 @@ import (
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
-// Error injects the error within the request
-func Error(w http.ResponseWriter, r *http.Request, err error) {
+func errorf(r *http.Request, err error) error {
 	err = errorChain(r, err)
 
 	errorReport(r, err)
 	errorStatus(r, err)
 
-	Respond(w, r, errorWrap(err))
-}
-
-// ErrorXML injects the error within the request
-func ErrorXML(w http.ResponseWriter, r *http.Request, err error) {
-	err = errorChain(r, err)
-
-	errorReport(r, err)
-	errorStatus(r, err)
-
-	XML(w, r, errorWrap(err))
-}
-
-// ErrorJSON injects the error within the request
-func ErrorJSON(w http.ResponseWriter, r *http.Request, err error) {
-	err = errorChain(r, err)
-
-	errorReport(r, err)
-	errorStatus(r, err)
-
-	JSON(w, r, errorWrap(err))
+	return errorWrap(err)
 }
 
 func errorChain(r *http.Request, err error) error {

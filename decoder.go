@@ -2,31 +2,13 @@ package rest
 
 import (
 	"net/http"
-	"reflect"
-	"strings"
+	"net/url"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/go-playground/errors"
 	"github.com/go-playground/form"
-	validator "gopkg.in/go-playground/validator.v9"
 )
-
-type (
-	// Binder interface for managing request payloads.
-	Binder = render.Binder
-)
-
-// Bind decodes a request body and executes the Binder method of the
-// payload structure.
-func Bind(r *http.Request, v Binder) error {
-	err := render.Bind(r, v)
-
-	if err == nil {
-		err = Validate(r, v)
-	}
-
-	return err
-}
 
 // Decode is a package-level variable set to our default Decoder. We do this
 // because it allows you to set render.Decode to another function with the
@@ -35,7 +17,24 @@ func Bind(r *http.Request, v Binder) error {
 // defaults. For example, maybe you want to impose a limit on the number of
 // bytes allowed to be read from the request body.
 func Decode(r *http.Request, v interface{}) error {
-	err := DefaultDecoder(r, v)
+	var err error
+
+	switch render.GetRequestContentType(r) {
+	case render.ContentTypeJSON:
+		err = render.DecodeJSON(r.Body, v)
+	case render.ContentTypeXML:
+		err = render.DecodeXML(r.Body, v)
+	case render.ContentTypeForm:
+		err = DecodeForm(r, v)
+	default:
+		err = errors.New("render: unable to automatically decode the request content type")
+	}
+
+	if err != nil {
+		err = errors.WrapSkipFrames(err, "decode", 2).AddTag("status", http.StatusBadRequest)
+	}
+
+	//TODO: set defaults
 
 	if err == nil {
 		err = Validate(r, v)
@@ -44,69 +43,57 @@ func Decode(r *http.Request, v interface{}) error {
 	return err
 }
 
-// DefaultDecoder is the default decoder
-func DefaultDecoder(r *http.Request, v interface{}) error {
-	var err error
+// DecodeForm decodes an entity from form fields
+func DecodeForm(r *http.Request, v interface{}) (err error) {
+	decoder := form.NewDecoder()
 
-	switch render.GetRequestContentType(r) {
-	case render.ContentTypeForm:
-		decoder := form.NewDecoder()
-
-		if err = r.ParseForm(); err == nil {
-			err = decoder.Decode(v, r.Form)
-		}
-
-	default:
-		err = render.DefaultDecoder(r, v)
+	if err = r.ParseForm(); err == nil {
+		err = decoder.Decode(v, r.Form)
 	}
 
-	if err != nil {
-		err = errors.WrapSkipFrames(err, "decode", 2).AddTag("status", http.StatusBadRequest)
-	}
-
-	return err
+	return
 }
 
-// Validate validates a data
-func Validate(r *http.Request, data interface{}) error {
-	v := validator.New()
+// DecodePath decodes an entity from path
+func DecodePath(r *http.Request, v interface{}) error {
+	decoder := form.NewDecoder()
+	decoder.SetTagName("path")
 
-	for key, fn := range validationFuncMap {
-		if err := v.RegisterValidation(key, fn); err != nil {
-			return errors.WrapSkipFrames(err, "validate", 2).AddTag("status", http.StatusInternalServerError)
-		}
+	var (
+		values = url.Values{}
+		ctx    = chi.RouteContext(r.Context())
+	)
+
+	if ctx == nil {
+		return nil
 	}
 
-	v.RegisterTagNameFunc(func(field reflect.StructField) string {
-		switch render.GetRequestContentType(r) {
-		case render.ContentTypeJSON:
-			return tagName(field, "json")
-		case render.ContentTypeXML:
-			return tagName(field, "xml")
-		case render.ContentTypeForm:
-			return tagName(field, "form")
-		default:
-			return field.Name
-		}
-	})
-
-	if err := v.StructCtx(r.Context(), data); err != nil {
-		return errors.WrapSkipFrames(err, "validate", 2).AddTag("status", http.StatusUnprocessableEntity)
+	for index, key := range ctx.URLParams.Keys {
+		values.Add(key, ctx.URLParams.Values[index])
 	}
 
-	return nil
+	return decoder.Decode(v, values)
 }
 
-func tagName(field reflect.StructField, attr string) string {
-	tag := field.Tag.Get(attr)
+// DecodeQuery decodes an entity from query
+func DecodeQuery(r *http.Request, v interface{}) error {
+	decoder := form.NewDecoder()
+	decoder.SetTagName("query")
 
-	if idx := strings.Index(tag, ","); idx != -1 {
-		tag = tag[:idx]
+	values := url.Values{}
+
+	if r.URL != nil {
+		values = r.URL.Query()
 	}
 
-	if tag == "-" {
-		tag = field.Name
-	}
+	return decoder.Decode(v, values)
+}
 
-	return tag
+// DecodeHeader decodes an entity from query
+func DecodeHeader(r *http.Request, v interface{}) error {
+	decoder := form.NewDecoder()
+	decoder.SetTagName("header")
+
+	values := url.Values(r.Header)
+	return decoder.Decode(v, values)
 }

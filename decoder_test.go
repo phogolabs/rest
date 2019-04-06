@@ -1,103 +1,201 @@
 package rest_test
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"net/url"
-	"regexp"
 
+	"github.com/go-chi/chi"
+	"github.com/go-playground/errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/go-playground/errors"
 	"github.com/phogolabs/rest"
-	validator "gopkg.in/go-playground/validator.v9"
 )
 
-var _ = Describe("Decoder", func() {
-	Describe("Content-Type: application/x-www-form-urlencoded", func() {
+var _ = Describe("Decode", func() {
+	var request *http.Request
+
+	Describe("JSON", func() {
+		BeforeEach(func() {
+			contact := &Contact{Phone: "+188123451"}
+			request = NewJSONRequest(contact)
+		})
+
 		It("decodes a form request successfully", func() {
+			entity := Contact{}
+
+			Expect(rest.Decode(request, &entity)).To(Succeed())
+			Expect(entity.Phone).To(Equal("+188123451"))
+		})
+	})
+
+	Describe("XML", func() {
+		var contact *Contact
+
+		BeforeEach(func() {
+			contact = &Contact{Phone: "+188123451"}
+		})
+
+		JustBeforeEach(func() {
+			request = NewXMLRequest(contact)
+		})
+
+		It("decodes a form request successfully", func() {
+			entity := Contact{}
+
+			Expect(rest.Decode(request, &entity)).To(Succeed())
+			Expect(entity.Phone).To(Equal("+188123451"))
+		})
+
+		Context("when the validation fails", func() {
+			BeforeEach(func() {
+				contact = &Contact{Phone: "088HIPPO"}
+			})
+
+			It("returns an error", func() {
+				entity := Contact{}
+
+				err := rest.Decode(request, &entity)
+				Expect(err).To(HaveOccurred())
+
+				err = errors.Cause(err)
+				Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
+			})
+		})
+	})
+
+	Describe("FORM", func() {
+		BeforeEach(func() {
 			v := url.Values{}
 			v.Add("name", "John")
 			v.Add("age", "22")
 
+			request = NewFormRequest(v)
+		})
+
+		It("decodes a form request successfully", func() {
 			entity := Person{}
-			request := NewFormRequest(v)
 
 			Expect(rest.Decode(request, &entity)).To(Succeed())
 			Expect(entity.Name).To(Equal("John"))
 			Expect(entity.Age).To(BeEquivalentTo(22))
 		})
-
-		Context("when the parsing fails", func() {
-			It("returns a n error", func() {
-				v := url.Values{}
-				v.Add("age", "-22")
-
-				entity := Person{}
-				request := NewFormRequest(v)
-
-				err := errors.Cause(rest.Decode(request, &entity))
-				Expect(err).To(MatchError("Field Namespace:age ERROR:Invalid Unsigned Integer Value '-22' Type 'uint' Namespace 'age'"))
-			})
-		})
 	})
 
-	Describe("Validate", func() {
-		Context("when custom validation is registered", func() {
-			BeforeEach(func() {
-				rest.RegisterValidation("phone", func(field validator.FieldLevel) bool {
-					phoneRegexp := regexp.MustCompile("\\+[0-9]+")
-					value := field.Field().String()
-					return phoneRegexp.MatchString(value)
-				})
-			})
+	Context("when the Content-Tyoe is UNKNOWN", func() {
+		BeforeEach(func() {
+			contact := &Contact{Phone: "088HIPPO"}
+			request = NewGobRequest(contact)
+		})
 
-			Context("when the Content-Tyoe = application/json", func() {
-				It("validates the entity with it", func() {
-					entity := &Contact{}
-					contact := &Contact{Phone: "088HIPPO"}
+		It("returns an error", func() {
+			entity := Contact{}
 
-					request := NewJSONRequest(contact)
+			err := rest.Decode(request, &entity)
+			Expect(err).To(HaveOccurred())
 
-					err := errors.Cause(rest.Decode(request, entity))
-					Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
-				})
-			})
+			err = errors.Cause(err)
+			Expect(err).To(MatchError("render: unable to automatically decode the request content type"))
+		})
+	})
+})
 
-			Context("when the Content-Tyoe = application/xml", func() {
-				It("validates the entity with it", func() {
-					entity := &Contact{}
-					contact := &Contact{Phone: "088HIPPO"}
+var _ = Describe("DecodePath", func() {
+	var request *http.Request
 
-					request := NewXMLRequest(contact)
+	type User struct {
+		ID int `path:"id"`
+	}
 
-					err := errors.Cause(rest.Decode(request, entity))
-					Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
-				})
-			})
+	BeforeEach(func() {
+		request = httptest.NewRequest("POST", "http://example.com/users/1", nil)
+	})
 
-			Context("when the Content-Tyoe = application/www-x-form-urlencoded", func() {
-				It("validates the entity", func() {
-					v := url.Values{}
-					v.Add("phone", "555ZERO")
+	It("decodes the request successfully", func() {
+		router := chi.NewMux()
 
-					entity := &Contact{}
-					request := NewFormRequest(v)
+		router.Mount("/users/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			user := User{}
+			Expect(rest.DecodePath(r, &user)).To(Succeed())
+			Expect(user.ID).To(Equal(1))
+		}))
 
-					err := errors.Cause(rest.Decode(request, entity))
-					Expect(err).To(MatchError("Key: 'Contact.phone' Error:Field validation for 'phone' failed on the 'phone' tag"))
-				})
-			})
+		router.ServeHTTP(httptest.NewRecorder(), request)
+	})
 
-			Context("when the Content-Tyoe = application/gob", func() {
-				It("validates the entity", func() {
-					contact := &Contact{Phone: "088HIPPO"}
+	Context("when the types are incompatible", func() {
+		BeforeEach(func() {
+			request = httptest.NewRequest("POST", "http://example.com/users/root", nil)
+		})
 
-					request := NewGobRequest(contact)
+		It("returns an error", func() {
+			router := chi.NewMux()
 
-					err := errors.Cause(rest.Validate(request, contact))
-					Expect(err.Error()).To(Equal("Key: 'Contact.Phone' Error:Field validation for 'Phone' failed on the 'phone' tag"))
-				})
-			})
+			router.Mount("/users/{id}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				user := User{}
+				Expect(rest.DecodePath(r, &user)).To(MatchError("Field Namespace:id ERROR:Invalid Integer Value 'root' Type 'int' Namespace 'id'"))
+			}))
+
+			router.ServeHTTP(httptest.NewRecorder(), request)
+		})
+	})
+})
+
+var _ = Describe("DecodeQuery", func() {
+	var request *http.Request
+
+	type User struct {
+		ID int `query:"id"`
+	}
+
+	BeforeEach(func() {
+		request = httptest.NewRequest("POST", "http://example.com/?id=1", nil)
+	})
+
+	It("decodes the request successfully", func() {
+		user := User{}
+		Expect(rest.DecodeQuery(request, &user)).To(Succeed())
+		Expect(user.ID).To(Equal(1))
+	})
+
+	Context("when the types are incompatible", func() {
+		BeforeEach(func() {
+			request = httptest.NewRequest("POST", "http://example.com/?id=root", nil)
+		})
+
+		It("returns an error", func() {
+			user := User{}
+			Expect(rest.DecodeQuery(request, &user)).To(MatchError("Field Namespace:id ERROR:Invalid Integer Value 'root' Type 'int' Namespace 'id'"))
+		})
+	})
+})
+
+var _ = Describe("DecodeHeader", func() {
+	var request *http.Request
+
+	type User struct {
+		ID int `header:"X-User-Id"`
+	}
+
+	BeforeEach(func() {
+		request = httptest.NewRequest("POST", "http://example.com", nil)
+		request.Header.Set("X-User-Id", "1")
+	})
+
+	It("decodes the request successfully", func() {
+		user := User{}
+		Expect(rest.DecodeHeader(request, &user)).To(Succeed())
+		Expect(user.ID).To(Equal(1))
+	})
+
+	Context("when the types are incompatible", func() {
+		BeforeEach(func() {
+			request.Header.Set("X-User-Id", "root")
+		})
+
+		It("returns an error", func() {
+			user := User{}
+			Expect(rest.DecodeHeader(request, &user)).To(MatchError("Field Namespace:X-User-Id ERROR:Invalid Integer Value 'root' Type 'int' Namespace 'X-User-Id'"))
 		})
 	})
 })
