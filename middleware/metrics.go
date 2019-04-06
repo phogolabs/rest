@@ -41,9 +41,7 @@ func Metrics(next http.Handler) http.Handler {
 	})
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		handler := InstrumentHandlerCounter(reqTotal,
-			InstrumentHandlerDuration(reqTime, hn))
-
+		handler := InstrumentHandlerCounter(reqTotal, InstrumentHandlerDuration(reqTime, hn))
 		handler.ServeHTTP(w, r)
 	}
 

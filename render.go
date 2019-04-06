@@ -3,8 +3,8 @@ package rest
 import (
 	"net/http"
 
-	"github.com/apex/log"
 	"github.com/go-chi/render"
+	"github.com/phogolabs/log"
 	"github.com/phogolabs/rest/middleware"
 )
 
@@ -42,6 +42,6 @@ func Status(r *http.Request, status int) {
 }
 
 // GetLogger returns the associated request logger
-func GetLogger(r *http.Request) log.Interface {
+func GetLogger(r *http.Request) log.Writer {
 	return middleware.GetLogger(r)
 }

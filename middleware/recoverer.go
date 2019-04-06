@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/apex/log"
-	rollbar "github.com/rollbar/rollbar-go"
+	"github.com/phogolabs/log"
 )
 
 // Recoverer is a middleware that recovers from panics, logs the panic (and a
@@ -21,18 +20,12 @@ func Recoverer(next http.Handler) http.Handler {
 			if rvr := recover(); rvr != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 
-				fields := log.Fields{
+				fields := log.FieldMap{
 					"cause": rvr,
 					"stack": string(debug.Stack()),
 				}
 
-				logger.WithFields(fields).Error("panic")
-
-				if rollbar.Token() == "" {
-					return
-				}
-
-				rollbar.RequestMessageWithExtras(rollbar.CRIT, r, "panic", fields)
+				logger.WithFields(fields).Alert("panic")
 			}
 		}()
 

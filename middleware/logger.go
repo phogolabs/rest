@@ -1,85 +1,12 @@
 package middleware
 
 import (
-	"context"
-	"fmt"
-	"io"
 	"net/http"
-	"strings"
 	"time"
 
-	"github.com/apex/log"
-	"github.com/apex/log/handlers/cli"
-	"github.com/apex/log/handlers/json"
-	"github.com/apex/log/handlers/text"
 	"github.com/go-chi/chi/middleware"
+	"github.com/phogolabs/log"
 )
-
-// LoggerCtxKey is the context.Context key to store the request log entry.
-var LoggerCtxKey = &ContextKey{"Logger"}
-
-// LoggerConfig configures the logger
-type LoggerConfig struct {
-	// Fields of the root logger
-	Fields log.Fields
-	// Level is the logger's level (info, error, debug, verbose and etc.)
-	Level string
-	// Format of the log (json, text or cli)
-	Format string
-	// Output of the log
-	Output io.Writer
-}
-
-// SetLogger sets the logger
-func SetLogger(cfg *LoggerConfig) error {
-	var handler log.Handler
-
-	switch strings.ToLower(cfg.Format) {
-	case "json":
-		handler = json.New(cfg.Output)
-	case "text":
-		handler = text.New(cfg.Output)
-	case "cli":
-		handler = cli.New(cfg.Output)
-	default:
-		return fmt.Errorf("unsupported log format '%s'", cfg.Format)
-	}
-
-	log.SetHandler(handler)
-
-	level, err := log.ParseLevel(cfg.Level)
-	if err != nil {
-		return err
-	}
-
-	log.SetLevel(level)
-	log.Log = log.Log.WithFields(cfg.Fields)
-
-	return nil
-}
-
-// LoggerFields returns the logger's fields
-func LoggerFields(r *http.Request) log.Fields {
-	scheme := func(r *http.Request) string {
-		proto := "http"
-
-		if r.TLS != nil {
-			proto = "https"
-		}
-
-		return proto
-	}
-
-	return log.Fields{
-		"scheme":      scheme(r),
-		"host":        r.Host,
-		"url":         r.RequestURI,
-		"proto":       r.Proto,
-		"method":      r.Method,
-		"remote_addr": r.RemoteAddr,
-		"request_id":  middleware.GetReqID(r.Context()),
-	}
-}
 
 // Logger is a middleware that logs the start and end of each request, along
 // with some useful data about what was requested, what the response status was,
@@ -87,14 +14,14 @@ func LoggerFields(r *http.Request) log.Fields {
 func Logger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		logger := log.WithFields(LoggerFields(r))
+		ctx := log.SetContext(r.Context(), logger)
 
 		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-		ctx := context.WithValue(r.Context(), LoggerCtxKey, logger)
-
 		start := time.Now()
+
 		next.ServeHTTP(writer, r.WithContext(ctx))
 
-		logger = logger.WithFields(log.Fields{
+		logger = logger.WithFields(log.FieldMap{
 			"status":   writer.Status(),
 			"size":     writer.BytesWritten(),
 			"duration": time.Since(start),
@@ -114,10 +41,29 @@ func Logger(next http.Handler) http.Handler {
 }
 
 // GetLogger returns the associated request logger
-func GetLogger(r *http.Request) log.Interface {
-	if logger, ok := r.Context().Value(LoggerCtxKey).(log.Interface); ok {
-		return logger
+func GetLogger(r *http.Request) log.Writer {
+	return log.GetContext(r.Context())
+}
+
+// LoggerFields returns the logger's fields
+func LoggerFields(r *http.Request) log.FieldMap {
+	scheme := func(r *http.Request) string {
+		proto := "http"
+
+		if r.TLS != nil {
+			proto = "https"
+		}
+
+		return proto
 	}
 
-	return log.Log
+	return log.FieldMap{
+		"scheme":      scheme(r),
+		"host":        r.Host,
+		"url":         r.RequestURI,
+		"proto":       r.Proto,
+		"method":      r.Method,
+		"remote_addr": r.RemoteAddr,
+		"request_id":  middleware.GetReqID(r.Context()),
+	}
 }

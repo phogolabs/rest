@@ -3,13 +3,11 @@ package rest
 import (
 	"net/http"
 
-	"github.com/apex/log"
 	"github.com/go-chi/render"
 	"github.com/go-playground/errors"
 	"github.com/goware/errorx"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/phogolabs/rest/middleware"
-	rollbar "github.com/rollbar/rollbar-go"
+	"github.com/phogolabs/log"
 	validator "gopkg.in/go-playground/validator.v9"
 )
 
@@ -43,7 +41,7 @@ func errorChain(r *http.Request, err error) error {
 func errorReport(r *http.Request, err error) {
 	status := errors.LookupTag(err, "status").(int)
 
-	fields := log.Fields{
+	fields := log.FieldMap{
 		"status": status,
 	}
 
@@ -58,31 +56,6 @@ func errorReport(r *http.Request, err error) {
 		logger.Warn("occurred")
 	default:
 		logger.Info("occurred")
-	}
-
-	if rollbar.Token() == "" {
-		return
-	}
-
-	enabled, ok := errors.LookupTag(err, "rollbar").(bool)
-	if !ok {
-		enabled = true
-	}
-
-	if !enabled {
-		return
-	}
-
-	fields = log.Fields{
-		"request_id": middleware.GetReqID(r.Context()),
-		"status":     status,
-	}
-
-	switch {
-	case status >= 500:
-		rollbar.RequestErrorWithExtras(rollbar.ERR, r, err, fields)
-	case status >= 400:
-		rollbar.RequestErrorWithExtras(rollbar.WARN, r, err, fields)
 	}
 }
 
