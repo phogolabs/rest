@@ -6,7 +6,7 @@
 [![Coverage][codecov-img]][codecov-url]
 [![Go Report Card][report-img]][report-url]
 
-*Built Restful Services"
+*Built Restful Services*
 
 [![rest][rest-img]][rest-url]
 
