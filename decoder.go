@@ -18,6 +18,20 @@ import (
 // defaults. For example, maybe you want to impose a limit on the number of
 // bytes allowed to be read from the request body.
 func Decode(r *http.Request, v interface{}) error {
+	err := render.Decode(r, v)
+
+	if err == nil {
+		err = Validate(r, v)
+	}
+
+	return err
+}
+
+func respond(w http.ResponseWriter, r *http.Request, v interface{}) {
+	render.DefaultResponder(w, r, v)
+}
+
+func decode(r *http.Request, v interface{}) error {
 	var err error
 
 	switch render.GetRequestContentType(r) {
@@ -37,10 +51,6 @@ func Decode(r *http.Request, v interface{}) error {
 
 	if err != nil {
 		err = errors.WrapSkipFrames(err, "decode", 2).AddTag("status", http.StatusBadRequest)
-	}
-
-	if err == nil {
-		err = Validate(r, v)
 	}
 
 	return err
