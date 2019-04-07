@@ -5,11 +5,17 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/creasty/defaults"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/go-playground/errors"
 	"github.com/go-playground/form"
 )
+
+func init() {
+	render.Decode = decode
+	render.Respond = respond
+}
 
 // Decode is a package-level variable set to our default Decoder. We do this
 // because it allows you to set render.Decode to another function with the
@@ -18,42 +24,11 @@ import (
 // defaults. For example, maybe you want to impose a limit on the number of
 // bytes allowed to be read from the request body.
 func Decode(r *http.Request, v interface{}) error {
-	err := render.Decode(r, v)
-
-	if err == nil {
-		err = Validate(r, v)
+	if err := render.Decode(r, v); err != nil {
+		return err
 	}
 
-	return err
-}
-
-func respond(w http.ResponseWriter, r *http.Request, v interface{}) {
-	render.DefaultResponder(w, r, v)
-}
-
-func decode(r *http.Request, v interface{}) error {
-	var err error
-
-	switch render.GetRequestContentType(r) {
-	case render.ContentTypeJSON:
-		err = render.DecodeJSON(r.Body, v)
-	case render.ContentTypeXML:
-		err = render.DecodeXML(r.Body, v)
-	case render.ContentTypeForm:
-		err = DecodeForm(r, v)
-	default:
-		err = errors.New("render: unable to automatically decode the request content type")
-	}
-
-	if err == io.EOF {
-		err = nil
-	}
-
-	if err != nil {
-		err = errors.WrapSkipFrames(err, "decode", 2).AddTag("status", http.StatusBadRequest)
-	}
-
-	return err
+	return Validate(r, v)
 }
 
 // DecodeForm decodes an entity from form fields
@@ -105,4 +80,39 @@ func DecodeHeader(r *http.Request, v interface{}) error {
 
 	values := url.Values(r.Header)
 	return decoder.Decode(v, values)
+}
+
+func decode(r *http.Request, v interface{}) (err error) {
+	errf := func(errno error) error {
+		return errors.WrapSkipFrames(errno, "decode", 3).AddTag("status", http.StatusBadRequest)
+	}
+
+	switch render.GetRequestContentType(r) {
+	case render.ContentTypeJSON:
+		err = render.DecodeJSON(r.Body, v)
+	case render.ContentTypeXML:
+		err = render.DecodeXML(r.Body, v)
+	case render.ContentTypeForm:
+		err = DecodeForm(r, v)
+	default:
+		err = errors.New("render: unable to automatically decode the request content type")
+	}
+
+	if err != nil && err != io.EOF {
+		return errf(err)
+	}
+
+	if err = defaults.Set(v); err != nil {
+		return errf(err)
+	}
+
+	return nil
+}
+
+func respond(w http.ResponseWriter, r *http.Request, v interface{}) {
+	render.DefaultResponder(w, r, v)
+
+	if err := defaults.Set(v); err != nil {
+		GetLogger(r).WithError(err).Errorf("unable to set defaults")
+	}
 }

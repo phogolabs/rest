@@ -1,6 +1,7 @@
 module github.com/phogolabs/rest
 
 require (
+	github.com/creasty/defaults v1.3.0
 	github.com/go-chi/chi v4.0.0+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/errors v3.3.0+incompatible

@@ -8,11 +8,6 @@ import (
 	"github.com/phogolabs/rest/middleware"
 )
 
-func init() {
-	render.Decode = decode
-	render.Respond = respond
-}
-
 // Binder interface for managing request payloads.
 type Binder interface {
 	Bind(r *http.Request) error
