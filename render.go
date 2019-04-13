@@ -4,8 +4,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/phogolabs/log"
-	"github.com/phogolabs/rest/middleware"
 )
 
 // Binder interface for managing request payloads.
@@ -41,9 +39,4 @@ func Render(w http.ResponseWriter, r *http.Request, v Renderer) error {
 // it will check the StatusCtxKey
 func Status(r *http.Request, status int) {
 	render.Status(r, status)
-}
-
-// GetLogger returns the associated request logger
-func GetLogger(r *http.Request) log.Writer {
-	return middleware.GetLogger(r)
 }
