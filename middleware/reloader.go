@@ -75,7 +75,7 @@ func (l *Reloader) script(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(buffer, "socket.addEventListener('message', function (event) {")
 	fmt.Fprintln(buffer, "  const message = JSON.parse(event.data);")
 	fmt.Fprintln(buffer, "  if (message.topic === 'notify' && message.data === 'reload') {")
-	fmt.Fprintln(buffer, "    window.document.location.reload(true);")
+	fmt.Fprintln(buffer, "    liveReload();")
 	fmt.Fprintln(buffer, "  }")
 	fmt.Fprintln(buffer, "});")
 
