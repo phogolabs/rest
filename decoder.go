@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/url"
@@ -44,16 +45,21 @@ func DecodeForm(r *http.Request, v interface{}) (err error) {
 
 // DecodePath decodes an entity from path
 func DecodePath(r *http.Request, v interface{}) error {
+	return DecodePathContext(r.Context(), v)
+}
+
+// DecodePath decodes an entity from path
+func DecodePathContext(ctx context.Context, v interface{}) error {
 	decoder := form.NewDecoder()
 	decoder.SetTagName("path")
 
 	var (
 		values = url.Values{}
-		ctx    = chi.RouteContext(r.Context())
+		rctx   = chi.RouteContext(ctx)
 	)
 
-	for index, key := range ctx.URLParams.Keys {
-		values.Add(key, ctx.URLParams.Values[index])
+	for index, key := range rctx.URLParams.Keys {
+		values.Add(key, rctx.URLParams.Values[index])
 	}
 
 	return decoder.Decode(v, values)
