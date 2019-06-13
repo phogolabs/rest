@@ -43,6 +43,17 @@ func DecodeForm(r *http.Request, v interface{}) (err error) {
 	return
 }
 
+// UnmarshalForm unmashals form
+func UnmarshalForm(data []byte, v interface{}) error {
+	values, err := url.ParseQuery(string(data))
+	if err != nil {
+		return err
+	}
+
+	decoder := form.NewDecoder()
+	return decoder.Decode(v, values)
+}
+
 // DecodePath decodes an entity from path
 func DecodePath(r *http.Request, v interface{}) error {
 	return DecodePathContext(r.Context(), v)
