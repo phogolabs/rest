@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -12,6 +13,9 @@ import (
 	"github.com/go-playground/errors"
 	"github.com/go-playground/form"
 )
+
+// ErrNoRouteContextFound returns no route context error
+var ErrNoRouteContextFound = fmt.Errorf("no route context found")
 
 func init() {
 	render.Decode = decode
@@ -65,9 +69,13 @@ func DecodePathContext(ctx context.Context, v interface{}) error {
 	decoder.SetTagName("path")
 
 	var (
-		values = url.Values{}
-		rctx   = chi.RouteContext(ctx)
+		values   = url.Values{}
+		rctx, ok = ctx.Value(chi.RouteCtxKey).(*chi.Context)
 	)
+
+	if !ok {
+		return ErrNoRouteContextFound
+	}
 
 	for index, key := range rctx.URLParams.Keys {
 		values.Add(key, rctx.URLParams.Values[index])
