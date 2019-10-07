@@ -21,7 +21,7 @@ func Logger(next http.Handler) http.Handler {
 
 		next.ServeHTTP(writer, r.WithContext(ctx))
 
-		logger = logger.WithFields(log.FieldMap{
+		logger = logger.WithFields(log.Map{
 			"status":   writer.Status(),
 			"size":     writer.BytesWritten(),
 			"duration": time.Since(start),
@@ -41,12 +41,12 @@ func Logger(next http.Handler) http.Handler {
 }
 
 // GetLogger returns the associated request logger
-func GetLogger(r *http.Request) log.Writer {
+func GetLogger(r *http.Request) log.Logger {
 	return log.GetContext(r.Context())
 }
 
 // LoggerFields returns the logger's fields
-func LoggerFields(r *http.Request) log.FieldMap {
+func LoggerFields(r *http.Request) log.Map {
 	scheme := func(r *http.Request) string {
 		proto := "http"
 
@@ -57,7 +57,7 @@ func LoggerFields(r *http.Request) log.FieldMap {
 		return proto
 	}
 
-	return log.FieldMap{
+	return log.Map{
 		"scheme":      scheme(r),
 		"host":        r.Host,
 		"url":         r.RequestURI,

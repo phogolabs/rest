@@ -24,7 +24,7 @@ func errorChain(r *http.Request, err error) error {
 	ch, ok := err.(errors.Chain)
 
 	if !ok {
-		ch = errors.WrapSkipFrames(err, "request", 2)
+		ch = errors.WrapSkipFrames(err, "request", 4)
 	}
 
 	if code, ok := errors.LookupTag(ch, "status").(int); !ok {

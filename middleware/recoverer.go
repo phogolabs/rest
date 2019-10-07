@@ -20,7 +20,7 @@ func Recoverer(next http.Handler) http.Handler {
 			if rvr := recover(); rvr != nil {
 				w.WriteHeader(http.StatusInternalServerError)
 
-				fields := log.FieldMap{
+				fields := log.Map{
 					"cause": rvr,
 					"stack": string(debug.Stack()),
 				}
