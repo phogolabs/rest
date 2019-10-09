@@ -41,7 +41,7 @@ func errorChain(r *http.Request, err error) error {
 func errorReport(r *http.Request, err error) {
 	status := errors.LookupTag(err, "status").(int)
 
-	fields := log.FieldMap{
+	fields := log.Map{
 		"status": status,
 	}
 

@@ -9,14 +9,14 @@ import (
 )
 
 // GetLogger returns the associated request logger
-func GetLogger(r *http.Request) log.Writer {
+func GetLogger(r *http.Request) log.Logger {
 	return middleware.GetLogger(r)
 }
 
 // Print print the routes
 func Print(routes chi.Routes) {
 	chi.Walk(routes, func(method, route string, _ http.Handler, _ ...func(http.Handler) http.Handler) error {
-		fields := log.FieldMap{
+		fields := log.Map{
 			"method": method,
 			"route":  route,
 		}
