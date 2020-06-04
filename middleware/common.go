@@ -23,12 +23,6 @@ var (
 	// order).
 	RealIP = middleware.RealIP
 
-	// DefaultCompress is a middleware that compresses response
-	// body of predefined content types to a data format based
-	// on Accept-Encoding request header. It uses a default
-	// compression level.
-	DefaultCompress = middleware.DefaultCompress
-
 	// NoCache is a simple piece of middleware that sets a number of HTTP headers to prevent
 	// a router (or subrouter) from being cached by an upstream proxy and/or client.
 	NoCache = middleware.NoCache
