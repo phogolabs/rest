@@ -21,41 +21,51 @@ func (fn LoggerOptionFunc) Apply(logger log.Logger) {
 	fn(logger)
 }
 
+// LoggerWithOption returns a logger middleware
+func LoggerWithOption(options ...LoggerOption) func(http.Handler) http.Handler {
+	mw := func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			logger := log.WithFields(LoggerFields(r))
+
+			for _, option := range options {
+				option.Apply(logger)
+			}
+
+			ctx := log.SetContext(r.Context(), logger)
+
+			writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			start := time.Now()
+
+			next.ServeHTTP(writer, r.WithContext(ctx))
+
+			logger = logger.WithFields(log.Map{
+				"status":   writer.Status(),
+				"size":     writer.BytesWritten(),
+				"duration": time.Since(start),
+			})
+
+			switch {
+			case writer.Status() >= 500:
+				logger.Error("response completion fail")
+			case writer.Status() >= 400:
+				logger.Warn("response completion warn")
+			default:
+				logger.Info("response completion success")
+			}
+		}
+
+		return http.HandlerFunc(fn)
+	}
+
+	return mw
+}
+
 // Logger is a middleware that logs the start and end of each request, along
 // with some useful data about what was requested, what the response status was,
 // and how long it took to return.
-func Logger(next http.Handler, options ...LoggerOption) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		logger := log.WithFields(LoggerFields(r))
-
-		for _, option := range options {
-			option.Apply(logger)
-		}
-
-		ctx := log.SetContext(r.Context(), logger)
-
-		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-		start := time.Now()
-
-		next.ServeHTTP(writer, r.WithContext(ctx))
-
-		logger = logger.WithFields(log.Map{
-			"status":   writer.Status(),
-			"size":     writer.BytesWritten(),
-			"duration": time.Since(start),
-		})
-
-		switch {
-		case writer.Status() >= 500:
-			logger.Error("response completion fail")
-		case writer.Status() >= 400:
-			logger.Warn("response completion warn")
-		default:
-			logger.Info("response completion success")
-		}
-	}
-
-	return http.HandlerFunc(fn)
+func Logger(next http.Handler) http.Handler {
+	fn := LoggerWithOption()
+	return fn(next)
 }
 
 // GetLogger returns the associated request logger
