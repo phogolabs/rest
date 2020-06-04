@@ -8,12 +8,30 @@ import (
 	"github.com/phogolabs/log"
 )
 
+// LoggerOption represent a logger option
+type LoggerOption interface {
+	Apply(logger log.Logger)
+}
+
+// LoggerOptionFunc represents a function
+type LoggerOptionFunc func(logger log.Logger)
+
+// Apply applies the option
+func (fn LoggerOptionFunc) Apply(logger log.Logger) {
+	fn(logger)
+}
+
 // Logger is a middleware that logs the start and end of each request, along
 // with some useful data about what was requested, what the response status was,
 // and how long it took to return.
-func Logger(next http.Handler) http.Handler {
+func Logger(next http.Handler, options ...LoggerOption) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		logger := log.WithFields(LoggerFields(r))
+
+		for _, option := range options {
+			option.Apply(logger)
+		}
+
 		ctx := log.SetContext(r.Context(), logger)
 
 		writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
@@ -29,11 +47,11 @@ func Logger(next http.Handler) http.Handler {
 
 		switch {
 		case writer.Status() >= 500:
-			logger.Error("response")
+			logger.Error("response completion fail")
 		case writer.Status() >= 400:
-			logger.Warn("response")
+			logger.Warn("response completion warn")
 		default:
-			logger.Info("response")
+			logger.Info("response completion success")
 		}
 	}
 
