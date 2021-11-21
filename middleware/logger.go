@@ -10,31 +10,50 @@ import (
 
 // LoggerOption represent a logger option
 type LoggerOption interface {
-	Apply(logger log.Logger)
+	Apply(logger log.Logger) log.Logger
 }
 
 // LoggerOptionFunc represents a function
-type LoggerOptionFunc func(logger log.Logger)
+type LoggerOptionFunc func(logger log.Logger) log.Logger
 
 // Apply applies the option
-func (fn LoggerOptionFunc) Apply(logger log.Logger) {
-	fn(logger)
+func (fn LoggerOptionFunc) Apply(logger log.Logger) log.Logger {
+	return fn(logger)
+}
+
+// LoggerOptionWithFields creates a new logger option with fields
+func LoggerOptionWithFields(kv log.Map) LoggerOption {
+	fn := func(logger log.Logger) log.Logger {
+		return logger.WithFields(kv)
+	}
+
+	return LoggerOptionFunc(fn)
 }
 
 // LoggerWithOption returns a logger middleware
 func LoggerWithOption(options ...LoggerOption) func(http.Handler) http.Handler {
 	mw := func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			logger := log.WithFields(LoggerFields(r))
-
+			var (
+				ctx  = r.Context()
+				meta = LoggerFields(r)
+			)
+			// prepare the logger
+			logger := log.GetContext(ctx)
+			// prepare the options
+			options = append(options, LoggerOptionWithFields(meta))
+			// compose the options
 			for _, option := range options {
-				option.Apply(logger)
+				logger = option.Apply(logger)
 			}
 
-			ctx := log.SetContext(r.Context(), logger)
+			// overwrite the context
+			ctx = log.SetContext(ctx, logger)
 
-			writer := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-			start := time.Now()
+			var (
+				writer = middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+				start  = time.Now()
+			)
 
 			next.ServeHTTP(writer, r.WithContext(ctx))
 
