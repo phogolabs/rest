@@ -5,7 +5,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect; in.comdirect
 	github.com/creasty/defaults v1.5.2
 	github.com/fsnotify/fsnotify v1.5.1
-	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/chi/v5 v5.0.7 //in.comdirect
 	github.com/go-chi/render v1.0.1
 	github.com/go-playground/errors v3.3.0+incompatible

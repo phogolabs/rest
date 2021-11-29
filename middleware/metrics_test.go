@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/phogolabs/rest/middleware"
 	"github.com/prometheus/client_golang/prometheus"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Metrics", func() {

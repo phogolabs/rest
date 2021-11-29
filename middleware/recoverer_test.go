@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/phogolabs/log"
 	"github.com/phogolabs/log/handler/json"
 	"github.com/phogolabs/rest/middleware"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Recoverer", func() {
