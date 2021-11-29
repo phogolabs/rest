@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/goware/errorx"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/phogolabs/rest"
-	validator "gopkg.in/go-playground/validator.v9"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

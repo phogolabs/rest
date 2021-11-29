@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/go-playground/errors"
-	validator "gopkg.in/go-playground/validator.v9"
+	"github.com/go-playground/validator/v10"
 )
 
 var (

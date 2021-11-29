@@ -8,8 +8,8 @@ import (
 	"os"
 
 	hub "github.com/DATA-DOG/golang-websocket-hub"
+	"github.com/fsnotify/fsnotify"
 	"github.com/phogolabs/log"
-	"gopkg.in/fsnotify.v1"
 )
 
 // Reloader reloads the page

@@ -5,10 +5,10 @@ import (
 
 	"github.com/go-chi/render"
 	"github.com/go-playground/errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/goware/errorx"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/phogolabs/log"
-	validator "gopkg.in/go-playground/validator.v9"
 )
 
 func errorf(r *http.Request, err error) error {

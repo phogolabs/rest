@@ -13,10 +13,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/phogolabs/rest"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/phogolabs/rest"
-	validator "gopkg.in/go-playground/validator.v9"
 )
 
 type (

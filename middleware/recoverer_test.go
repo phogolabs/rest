@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/phogolabs/log"
 	"github.com/phogolabs/log/handler/json"

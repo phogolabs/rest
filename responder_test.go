@@ -3,9 +3,10 @@ package rest_test
 import (
 	"net/http/httptest"
 
+	"github.com/phogolabs/rest"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/phogolabs/rest"
 )
 
 var _ = Describe("Respond", func() {

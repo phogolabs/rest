@@ -8,7 +8,7 @@ import (
 	"net/url"
 
 	"github.com/creasty/defaults"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/go-playground/errors"
 	"github.com/go-playground/form"

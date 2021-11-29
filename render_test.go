@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 
 	"github.com/go-playground/errors"
+	"github.com/phogolabs/rest"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/phogolabs/rest"
 )
 
 var _ = Describe("Bind", func() {
