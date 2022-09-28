@@ -9,7 +9,7 @@ import (
 	"github.com/phogolabs/rest/middleware"
 	"github.com/prometheus/client_golang/prometheus"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

@@ -14,7 +14,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/phogolabs/rest"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
