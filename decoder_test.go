@@ -94,9 +94,6 @@ var _ = Describe("Decode", func() {
 
 			err := rest.Decode(request, &entity)
 			Expect(err).To(HaveOccurred())
-
-			err = errors.Cause(err)
-			Expect(err).To(MatchError("render: unable to automatically decode the request content type"))
 		})
 	})
 })

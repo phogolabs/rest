@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-	"github.com/go-playground/form"
+	"github.com/go-playground/form/v4"
 )
 
 // Respond handles streaming JSON and XML responses, automatically setting the

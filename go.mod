@@ -7,11 +7,10 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8 //in.comdirect
 	github.com/go-chi/render v1.0.2
 	github.com/go-playground/errors v3.3.0+incompatible
-	github.com/go-playground/form v3.1.4+incompatible
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/goware/errorx v0.0.0-20150526135951-6c5540545f5f
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/onsi/gomega v1.24.2
+	github.com/onsi/gomega v1.26.0
 	github.com/phogolabs/log v0.0.0-20230111045248-dad4d3c50e0f
 	github.com/prometheus/client_golang v1.14.0
 )
@@ -21,11 +20,14 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect; in.comdirect
 	github.com/phogolabs/flaw v0.0.0-20230111045222-8efffb46800b // indirect; in.comdirect
 	golang.org/x/crypto v0.7.0 // indirect
-	google.golang.org/genproto v0.0.0-20230303212802-e74f57abe488 // indirect; in.comdirect
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect; in.comdirect
 )
 
-require github.com/onsi/ginkgo/v2 v2.7.0
+require (
+	github.com/go-playground/errors/v5 v5.2.3
+	github.com/go-playground/form/v4 v4.2.0
+	github.com/onsi/ginkgo/v2 v2.8.1
+)
 
 require (
 	github.com/ajg/form v1.5.1 // indirect
@@ -34,6 +36,7 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
+	github.com/go-playground/pkg/v5 v5.15.2 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect

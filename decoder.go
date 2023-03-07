@@ -10,8 +10,8 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
-	"github.com/go-playground/errors"
-	"github.com/go-playground/form"
+	"github.com/go-playground/errors/v5"
+	"github.com/go-playground/form/v4"
 )
 
 // ErrNoRouteContextFound returns no route context error
